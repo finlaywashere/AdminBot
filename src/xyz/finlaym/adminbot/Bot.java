@@ -64,20 +64,20 @@ public class Bot extends ListenerAdapter {
 		if (event.getAuthor().isBot())
 			return;
 		String message = event.getMessage().getContentRaw().toLowerCase();
-		for (String swear : swearWords) {
-			if (message.contains(swear)) {
-				// Oh No!!! Swear word detected!
-				event.getMessage().delete().queue();
-				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
-						+ " sent a swear word to channel #" + event.getChannel().getName() + "!");
-				event.getChannel().sendMessage("Swear, you will not!").queue();
-				return;
+		Member m = event.getMember();
+		boolean admin = isAdmin(m);
+		if(!admin) {
+			for (String swear : swearWords) {
+				if (message.contains(swear)) {
+					// Oh No!!! Swear word detected!
+					event.getMessage().delete().queue();
+					System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " sent a swear word to channel #" + event.getChannel().getName() + "!");
+					event.getChannel().sendMessage("Swear, you will not!").queue();
+					return;
+				}
 			}
 		}
 		if (message.startsWith("-")) {
-			Member m = event.getMember();
-			boolean admin = isAdmin(m);
-
 			if (!admin) {
 				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " tried to execute command in channel #"+ event.getChannel().getName() + " with insufficient permissions! Command: "+event.getMessage().getContentRaw());
 				return;
