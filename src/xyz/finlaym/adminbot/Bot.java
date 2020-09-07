@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -31,6 +33,7 @@ public class Bot extends ListenerAdapter {
 		String token = in.nextLine();
 		in.close();
 		loadSwears();
+		manager = new ConfigManager();
 		JDABuilder.createDefault(token).addEventListeners(new Bot()).build();
 	}
 
@@ -57,8 +60,48 @@ public class Bot extends ListenerAdapter {
 	}
 
 	private static List<String> swearWords;
+	private static ConfigManager manager;
 	private static Lock swearLock = new ReentrantLock();
+	private static Map<Long,Integer> currMessageCount = new HashMap<Long,Integer>();
 
+	public static int computeLevelUpLevels(int currLevel) {
+		if(currLevel == 1)
+			return 5;
+		int required = 5;
+		for(int i = 1; i <= currLevel; i++) {
+			required += i;
+			if(required > 100)
+				return 100;
+		}
+		
+		return required;
+	}
+	public void countMessages(MessageReceivedEvent event) {
+		long id = event.getAuthor().getIdLong();
+		if(!currMessageCount.containsKey(id)) {
+			currMessageCount.put(id, 1);
+			return;
+		}
+		int messageCount = currMessageCount.get(id);
+		messageCount++;
+		UserInfo info = manager.infoMap.get(id);
+		if(info == null) {
+			info = new UserInfo(event.getAuthor().getIdLong(),0);
+		}
+		if(messageCount >= computeLevelUpLevels(info.getLevel())) {
+			messageCount = 0;
+			info.setLevel(info.getLevel()+1);
+			manager.infoMap.put(id, info);
+			try {
+				manager.saveInfo();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.err.println("UwU program did an oopsie woopsie when it twiedd to swave the fwile");
+			}
+			event.getChannel().sendMessage("Congratulations "+event.getAuthor().getAsMention()+" for leveling up to level "+info.getLevel()+"!").queue();
+		}
+		currMessageCount.put(id, messageCount);
+	}
 	@Override
 	public void onMessageReceived(final MessageReceivedEvent event) {
 		if (event.getAuthor().isBot())
@@ -76,6 +119,12 @@ public class Bot extends ListenerAdapter {
 					return;
 				}
 			}
+		}
+		try {
+			countMessages(event);
+		}catch(Exception e) {
+			e.printStackTrace();
+			System.err.println("OwO *flips table* I did an oopsie woopsie and bwoke!");
 		}
 		if (message.startsWith("-")) {
 			if (!admin) {
