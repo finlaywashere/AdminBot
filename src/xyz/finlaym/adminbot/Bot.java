@@ -2,6 +2,7 @@ package xyz.finlaym.adminbot;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,34 +33,35 @@ public class Bot extends ListenerAdapter {
 		Scanner in = new Scanner(TOKEN_FILE);
 		String token = in.nextLine();
 		in.close();
-		loadSwears();
 		manager = new ConfigManager();
 		JDABuilder.createDefault(token).addEventListeners(new Bot()).build();
 	}
 
-	public static void loadSwears() throws Exception {
+	public static void loadSwears(long guildid) throws Exception {
 		swearLock.lock();
-		swearWords = new ArrayList<String>();
-		Scanner in = new Scanner(SWEAR_FILE);
+		swearWords = new HashMap<Long,List<String>>();
+		Scanner in = new Scanner(SWEAR_FILE+"."+guildid);
+		List<String> swears = new ArrayList<String>();
 		while (in.hasNextLine()) {
 			String swear = in.nextLine().trim().toLowerCase();
 			if (swear.isEmpty())
 				continue;
-			swearWords.add(swear);
+			swears.add(swear);
 		}
+		swearWords.put(guildid, swears);
 		in.close();
 		swearLock.unlock();
 	}
-	public static void addSwear(String s) throws Exception{
+	public static void addSwear(String s, long guildid) throws Exception{
 		swearLock.lock();
-		swearWords.add(s);
+		swearWords.get(guildid).add(s);
 		swearLock.unlock();
-		PrintWriter out = new PrintWriter(new FileWriter(SWEAR_FILE,true));
+		PrintWriter out = new PrintWriter(new FileWriter(SWEAR_FILE+"."+guildid,true));
 		out.print("\n"+s);
 		out.close();
 	}
 
-	private static List<String> swearWords;
+	private static Map<Long,List<String>> swearWords;
 	private static ConfigManager manager;
 	private static Lock swearLock = new ReentrantLock();
 	private static Map<Long,Integer> currMessageCount = new HashMap<Long,Integer>();
@@ -110,11 +112,30 @@ public class Bot extends ListenerAdapter {
 		Member m = event.getMember();
 		boolean admin = isAdmin(m);
 		if(!admin) {
-			for (String swear : swearWords) {
-				if (message.contains(swear)) {
+			long guildid = event.getGuild().getIdLong();
+			if(!swearWords.containsKey(guildid)) {
+				try {
+					loadSwears(guildid);
+				}catch(Exception e) {
+					System.out.println("Failed to load swear word file for server "+event.getGuild().getName()+" with id "+guildid+"! Creating empty one");
+					try {
+						File f = new File(SWEAR_FILE+"."+guildid);
+						f.createNewFile();
+						//PrintWriter p = new PrintWriter(new FileWriter(f,true));
+						//p.println("true");
+						//p.close();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					swearWords.put(guildid, new ArrayList<String>());
+				}
+			}
+			List<String> swears = swearWords.get(guildid);
+			for (int i = 0; i < swears.size(); i++) {
+				if (message.contains(swears.get(i))) {
 					// Oh No!!! Swear word detected!
 					event.getMessage().delete().queue();
-					System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " sent a swear word to channel #" + event.getChannel().getName() + "!");
+					System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " sent a swear word to channel #" + event.getChannel().getName() + "! They said:\n"+message);
 					event.getChannel().sendMessage("Swear, you will not!").queue();
 					return;
 				}
@@ -156,7 +177,7 @@ public class Bot extends ListenerAdapter {
 				String[] swears = message.split(" ",2)[1].split(" ");
 				for(String s : swears) {
 					try {
-						addSwear(s.replaceAll("_", " "));
+						addSwear(s.replaceAll("_", " "),event.getGuild().getIdLong());
 					}catch(Exception e) {
 						e.printStackTrace();
 						System.err.println("Failed to add swear word to file!");
@@ -173,7 +194,7 @@ public class Bot extends ListenerAdapter {
 				return;
 			}else if(message.equals("-reload")) {
 				try {
-					loadSwears();
+					loadSwears(event.getGuild().getIdLong());
 				} catch (Exception e) {
 					e.printStackTrace();
 					event.getChannel().sendMessage("Failed to reload swear word list").queue();
