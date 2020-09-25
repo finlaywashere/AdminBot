@@ -171,12 +171,23 @@ public class Bot extends ListenerAdapter {
 						+ "Note: For all commands underscores are converted to spaces unless otherwise specified (emoji names, etc)";
 				event.getChannel().sendMessage(helpMessage).queue();
 				return;
+			}else if(message.equals("-reload")) {
+				try {
+					loadSwears();
+				} catch (Exception e) {
+					e.printStackTrace();
+					event.getChannel().sendMessage("Failed to reload swear word list").queue();
+					return;
+				}
+				event.getChannel().sendMessage("Reloaded swear words!").queue();
 			}
 		}
 	}
 
 	private static boolean isAdmin(Member m) {
 		boolean admin = false;
+		if(m.isOwner())
+			return true;
 		for (Role r : m.getRoles()) {
 			if (r.hasPermission(Permission.ADMINISTRATOR)) {
 				admin = true;
