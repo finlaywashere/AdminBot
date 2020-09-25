@@ -55,9 +55,14 @@ public class Bot extends ListenerAdapter {
 	}
 	public static void addSwear(String s, long guildid) throws Exception{
 		swearLock.lock();
+		if(!swearWords.containsKey(guildid))
+			swearWords.put(guildid, new ArrayList<String>());
 		swearWords.get(guildid).add(s);
 		swearLock.unlock();
-		PrintWriter out = new PrintWriter(new FileWriter(SWEAR_FILE+"."+guildid,true));
+		File f = new File(SWEAR_FILE+"."+guildid);
+		if(!f.exists())
+			f.createNewFile();
+		PrintWriter out = new PrintWriter(new FileWriter(f,true));
 		out.print("\n"+s);
 		out.close();
 	}
