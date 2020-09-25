@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -160,6 +161,9 @@ public class Bot extends ListenerAdapter {
 					}
 					swearWords.put(guildid, new ArrayList<String>());
 				}
+			}
+			for(MessageEmbed e : event.getMessage().getEmbeds()) {
+				message += " "+e.getUrl();
 			}
 			List<String> swears = swearWords.get(guildid);
 			for (int i = 0; i < swears.size(); i++) {
