@@ -28,13 +28,21 @@ public class Bot extends ListenerAdapter {
 
 	private static final File TOKEN_FILE = new File("token.priv");
 	private static final File SWEAR_FILE = new File("swear.words");
+	private static final File ENABLE_FILE = new File("servers.enabled");
 
+	private static Map<Long,List<String>> swearWords = new HashMap<Long,List<String>>();
+	private static ConfigManager manager;
+	private static Lock swearLock = new ReentrantLock();
+	private static Map<Long,Integer> currMessageCount = new HashMap<Long,Integer>();
+	private static Lock enableLock = new ReentrantLock();
+	private static Map<Long,Boolean> enabled = new HashMap<Long,Boolean>();
+	
 	public static void main(String[] args) throws Exception {
 		Scanner in = new Scanner(TOKEN_FILE);
 		String token = in.nextLine();
 		in.close();
 		manager = new ConfigManager();
-		swearWords = new HashMap<Long,List<String>>();
+		loadServers();
 		JDABuilder.createDefault(token).addEventListeners(new Bot()).build();
 	}
 
@@ -53,6 +61,22 @@ public class Bot extends ListenerAdapter {
 		in.close();
 		swearLock.unlock();
 	}
+	public static void loadServers() throws Exception{
+		enableLock.lock();
+		enabled.clear();
+		if(!ENABLE_FILE.exists())
+			return;
+		Scanner in = new Scanner(ENABLE_FILE);
+		while(in.hasNextLine()) {
+			String s = in.nextLine().trim();
+			if(s.length() == 0)
+				continue;
+			String[] split = s.split(":",2);
+			enabled.put(Long.valueOf(split[0]), Boolean.valueOf(split[1]));
+		}
+		in.close();
+		enableLock.unlock();
+	}
 	public static void addSwear(String s, long guildid) throws Exception{
 		swearLock.lock();
 		if(!swearWords.containsKey(guildid))
@@ -60,17 +84,15 @@ public class Bot extends ListenerAdapter {
 		swearWords.get(guildid).add(s);
 		swearLock.unlock();
 		File f = new File(SWEAR_FILE+"."+guildid);
+		String outS = s;
 		if(!f.exists())
 			f.createNewFile();
+		else
+			outS = "\n"+outS;
 		PrintWriter out = new PrintWriter(new FileWriter(f,true));
-		out.print("\n"+s);
+		out.print(outS);
 		out.close();
 	}
-
-	private static Map<Long,List<String>> swearWords;
-	private static ConfigManager manager;
-	private static Lock swearLock = new ReentrantLock();
-	private static Map<Long,Integer> currMessageCount = new HashMap<Long,Integer>();
 
 	public static int computeLevelUpLevels(int currLevel) {
 		if(currLevel == 1)
@@ -90,6 +112,9 @@ public class Bot extends ListenerAdapter {
 			currMessageCount.put(id, 1);
 			return;
 		}
+		enableLock.lock();
+		if(!enabled.containsKey(event.getGuild().getIdLong()) || enabled.get(event.getGuild().getIdLong()) == false)
+			return;
 		int messageCount = currMessageCount.get(id);
 		messageCount++;
 		UserInfo info = manager.infoMap.get(id);
@@ -201,12 +226,15 @@ public class Bot extends ListenerAdapter {
 			}else if(message.equals("-reload")) {
 				try {
 					loadSwears(event.getGuild().getIdLong());
+					loadServers();
 				} catch (Exception e) {
 					e.printStackTrace();
 					event.getChannel().sendMessage("Failed to reload swear word list").queue();
 					return;
 				}
 				event.getChannel().sendMessage("Reloaded swear words!").queue();
+			}else if(message.equals("-gid")) {
+				event.getChannel().sendMessage("This guild's id is "+event.getGuild().getIdLong()).queue();
 			}
 		}
 	}
