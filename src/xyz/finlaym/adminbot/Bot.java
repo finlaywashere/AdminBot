@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -50,7 +49,7 @@ public class Bot extends ListenerAdapter {
 	public static void loadSwears(long guildid) throws Exception {
 		swearLock.lock();
 		swearWords = new HashMap<Long,List<String>>();
-		Scanner in = new Scanner(SWEAR_FILE+"."+guildid);
+		Scanner in = new Scanner(new File(SWEAR_FILE+"."+guildid));
 		List<String> swears = new ArrayList<String>();
 		while (in.hasNextLine()) {
 			String swear = in.nextLine().trim().toLowerCase();
@@ -161,9 +160,6 @@ public class Bot extends ListenerAdapter {
 					}
 					swearWords.put(guildid, new ArrayList<String>());
 				}
-			}
-			for(MessageEmbed e : event.getMessage().getEmbeds()) {
-				message += " "+e.getUrl();
 			}
 			List<String> swears = swearWords.get(guildid);
 			for (int i = 0; i < swears.size(); i++) {

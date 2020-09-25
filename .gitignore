@@ -12,6 +12,6 @@ bin/
 
 # Config files
 token.priv
-swear.words
+swear.words*
 user.info
 servers.enabled
