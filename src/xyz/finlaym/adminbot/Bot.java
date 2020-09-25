@@ -34,6 +34,7 @@ public class Bot extends ListenerAdapter {
 		String token = in.nextLine();
 		in.close();
 		manager = new ConfigManager();
+		swearWords = new HashMap<Long,List<String>>();
 		JDABuilder.createDefault(token).addEventListeners(new Bot()).build();
 	}
 
