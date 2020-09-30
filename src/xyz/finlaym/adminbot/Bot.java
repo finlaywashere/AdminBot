@@ -12,9 +12,12 @@ import java.util.Scanner;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDA.Status;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -36,6 +39,7 @@ public class Bot extends ListenerAdapter {
 	private static Map<Long,Integer> currMessageCount = new HashMap<Long,Integer>();
 	private static Lock enableLock = new ReentrantLock();
 	private static Map<Long,Boolean> enabled = new HashMap<Long,Boolean>();
+	private static JDA jda;
 	
 	public static void main(String[] args) throws Exception {
 		Scanner in = new Scanner(TOKEN_FILE);
@@ -43,7 +47,16 @@ public class Bot extends ListenerAdapter {
 		in.close();
 		manager = new ConfigManager();
 		loadServers();
-		JDABuilder.createDefault(token).addEventListeners(new Bot()).build();
+		jda = JDABuilder.createDefault(token).addEventListeners(new Bot()).setAutoReconnect(true).setActivity(Activity.watching("you")).build();
+		
+		while(true) {
+			if(jda.getStatus() == Status.ATTEMPTING_TO_RECONNECT) {
+				System.out.println("Disconnected from Discord! Forcing reconnect!");
+				jda.cancelRequests();
+				jda = JDABuilder.createDefault(token).addEventListeners(new Bot()).setAutoReconnect(true).setActivity(Activity.watching("you")).build();
+			}
+			Thread.sleep(60000);
+		}
 	}
 
 	public static void loadSwears(long guildid) throws Exception {
@@ -64,8 +77,10 @@ public class Bot extends ListenerAdapter {
 	public static void loadServers() throws Exception{
 		enableLock.lock();
 		enabled.clear();
-		if(!ENABLE_FILE.exists())
+		if(!ENABLE_FILE.exists()) {
+			enableLock.unlock();
 			return;
+		}
 		Scanner in = new Scanner(ENABLE_FILE);
 		while(in.hasNextLine()) {
 			String s = in.nextLine().trim();
@@ -113,8 +128,11 @@ public class Bot extends ListenerAdapter {
 			return;
 		}
 		enableLock.lock();
-		if(!enabled.containsKey(event.getGuild().getIdLong()) || enabled.get(event.getGuild().getIdLong()) == false)
+		if(!enabled.containsKey(event.getGuild().getIdLong()) || enabled.get(event.getGuild().getIdLong()) == false) {
+			enableLock.unlock();
 			return;
+		}
+		enableLock.unlock();
 		int messageCount = currMessageCount.get(id);
 		messageCount++;
 		UserInfo info = manager.infoMap.get(id);
@@ -205,6 +223,8 @@ public class Bot extends ListenerAdapter {
 				event.getMessage().delete().queue();
 				return;
 			}else if(message.startsWith("-addswear")) {
+				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+						+ " added swear word(s) \""+message.split(" ",2)[1]+"\" in channel #" + event.getChannel().getName()+"\"!");
 				String[] swears = message.split(" ",2)[1].split(" ");
 				for(String s : swears) {
 					try {
@@ -216,6 +236,8 @@ public class Bot extends ListenerAdapter {
 				}
 				return;
 			}else if(message.startsWith("-help")) {
+				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+						+ " requested the help menu in channel "+event.getChannel().getName()+"!");
 				String helpMessage = "-help\tShows this message\n"
 						+ "-roles <emoji and role names seperated by space>\tCreates a role selection dialogue\n"
 						+ "-addswear <swear words seperated by space>\tAdds a swear word to the list of swears\n"
@@ -224,6 +246,8 @@ public class Bot extends ListenerAdapter {
 				event.getChannel().sendMessage(helpMessage).queue();
 				return;
 			}else if(message.equals("-reload")) {
+				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+						+ " reloaded guild data in channel "+event.getChannel().getName()+"!");
 				try {
 					loadSwears(event.getGuild().getIdLong());
 					loadServers();
@@ -234,6 +258,8 @@ public class Bot extends ListenerAdapter {
 				}
 				event.getChannel().sendMessage("Reloaded swear words!").queue();
 			}else if(message.equals("-gid")) {
+				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+						+ " requested the guild's id in channel "+event.getChannel().getName()+"!");
 				event.getChannel().sendMessage("This guild's id is "+event.getGuild().getIdLong()).queue();
 			}
 		}
