@@ -173,7 +173,7 @@ public class Bot extends ListenerAdapter {
 				// Oh No!!! Swear word detected!
 				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " joined with a username with a disallowed word! Muting them and sending them a message!");
 				PrivateChannel channel = event.getUser().openPrivateChannel().complete();
-				channel.sendMessage("Hello! It appears you have a disallowed word in your username to join this server and because of this you have been muted! The detected word was \""+data[0]+"\"").queue();
+				channel.sendMessage("Hello! It appears you have a disallowed word in your username to join this server and because of this you have been muted!").queue();
 				
 				String roleName = (data.length >= 3 ? data[2] : "muted");
 				List<Role> roles = event.getGuild().getRolesByName(roleName, true);
