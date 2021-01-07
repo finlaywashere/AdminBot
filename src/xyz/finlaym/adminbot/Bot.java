@@ -333,6 +333,11 @@ public class Bot extends ListenerAdapter {
 	public void onMessageReactionAdd(MessageReactionAddEvent event) {
 		if (event.getMember().getUser().isBot())
 			return;
+		Message m = event.retrieveMessage().complete();
+		if(!m.getMember().getUser().isBot())
+			return;
+		if(!m.getContentRaw().startsWith("React to be assigned a role!"))
+			return;
 		final MessageReaction reac = event.getReaction();
 		Message message = event.getChannel().retrieveMessageById(event.getMessageIdLong()).complete();
 		boolean found = false;
