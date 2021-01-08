@@ -1,16 +1,13 @@
 package xyz.finlaym.adminbot;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDA.Status;
@@ -19,97 +16,63 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Emote;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import xyz.finlaym.adminbot.action.swear.SwearWord;
+import xyz.finlaym.adminbot.action.swear.SwearWord.ActivationType;
+import xyz.finlaym.adminbot.storage.DBInterface;
+import xyz.finlaym.adminbot.storage.config.ServerConfig;
+import xyz.finlaym.adminbot.storage.config.SwearsConfig;
+import xyz.finlaym.adminbot.storage.config.UserLevelConfig;
 
 public class Bot extends ListenerAdapter {
 
 	private static final File TOKEN_FILE = new File("token.priv");
-	private static final File SWEAR_FILE = new File("swear.words");
-	private static final File ENABLE_FILE = new File("servers.enabled");
-
-	private static Map<Long,List<String[]>> swearWords = new HashMap<Long,List<String[]>>();
-	private static ConfigManager manager;
-	private static Lock swearLock = new ReentrantLock();
+	private static final Logger logger = LoggerFactory.getLogger(Bot.class);
+	
+	
+	private static DBInterface dbInterface;
+	
 	private static Map<Long,Integer> currMessageCount = new HashMap<Long,Integer>();
-	private static Lock enableLock = new ReentrantLock();
-	private static Map<Long,Boolean> enabled = new HashMap<Long,Boolean>();
 	private static JDA jda;
+	private static SwearsConfig sConfig;
+	private static UserLevelConfig uConfig;
+	private static ServerConfig seConfig;
 	
 	public static void main(String[] args) throws Exception {
 		Scanner in = new Scanner(TOKEN_FILE);
 		String token = in.nextLine();
 		in.close();
-		manager = new ConfigManager();
-		loadServers();
-		jda = JDABuilder.createDefault(token).addEventListeners(new Bot()).setAutoReconnect(true).setActivity(Activity.watching("you")).enableIntents(GatewayIntent.GUILD_MEMBERS).build();
+		dbInterface = new DBInterface();
+		dbInterface.init("adminbot", "bot", "bot");
+		jda = JDABuilder.createDefault(token).addEventListeners(new Bot()).
+				setAutoReconnect(true).setActivity(Activity.watching("you")).
+				enableIntents(GatewayIntent.GUILD_MEMBERS).
+				setMemberCachePolicy(MemberCachePolicy.ONLINE).build();
+		
+		sConfig = new SwearsConfig(dbInterface);
+		uConfig = new UserLevelConfig(dbInterface);
+		seConfig = new ServerConfig(dbInterface);
 		
 		while(true) {
 			if(jda.getStatus() == Status.ATTEMPTING_TO_RECONNECT) {
-				System.out.println("Disconnected from Discord! Forcing reconnect!");
+				logger.warn("Disconnected from Discord! Forcing reconnect!");
 				jda.cancelRequests();
 				jda = JDABuilder.createDefault(token).addEventListeners(new Bot()).setAutoReconnect(true).setActivity(Activity.watching("you")).build();
 			}
 			Thread.sleep(60000);
 		}
-	}
-
-	public static void loadSwears(long guildid) throws Exception {
-		swearLock.lock();
-		swearWords = new HashMap<Long,List<String[]>>();
-		Scanner in = new Scanner(new File(SWEAR_FILE+"."+guildid));
-		List<String[]> swears = new ArrayList<String[]>();
-		while (in.hasNextLine()) {
-			String swear = in.nextLine().trim().toLowerCase();
-			if (swear.isEmpty())
-				continue;
-			swears.add(swear.split(":"));
-		}
-		swearWords.put(guildid, swears);
-		in.close();
-		swearLock.unlock();
-	}
-	public static void loadServers() throws Exception{
-		enableLock.lock();
-		enabled.clear();
-		if(!ENABLE_FILE.exists()) {
-			enableLock.unlock();
-			return;
-		}
-		Scanner in = new Scanner(ENABLE_FILE);
-		while(in.hasNextLine()) {
-			String s = in.nextLine().trim();
-			if(s.length() == 0)
-				continue;
-			String[] split = s.split(":",2);
-			enabled.put(Long.valueOf(split[0]), Boolean.valueOf(split[1]));
-		}
-		in.close();
-		enableLock.unlock();
-	}
-	public static void addSwear(String s, long guildid) throws Exception{
-		swearLock.lock();
-		if(!swearWords.containsKey(guildid))
-			swearWords.put(guildid, new ArrayList<String[]>());
-		swearWords.get(guildid).add(s.split(":"));
-		swearLock.unlock();
-		File f = new File(SWEAR_FILE+"."+guildid);
-		String outS = s;
-		if(!f.exists())
-			f.createNewFile();
-		else
-			outS = "\n"+outS;
-		PrintWriter out = new PrintWriter(new FileWriter(f,true));
-		out.print(outS);
-		out.close();
 	}
 
 	public static int computeLevelUpLevels(int currLevel) {
@@ -126,61 +89,43 @@ public class Bot extends ListenerAdapter {
 	}
 	public void countMessages(MessageReceivedEvent event) {
 		long id = event.getAuthor().getIdLong();
+		if(!seConfig.getLevelsEnabled(id))
+			return;
 		if(!currMessageCount.containsKey(id)) {
 			currMessageCount.put(id, 1);
 			return;
 		}
-		enableLock.lock();
-		if(!enabled.containsKey(event.getGuild().getIdLong()) || enabled.get(event.getGuild().getIdLong()) == false) {
-			enableLock.unlock();
-			return;
-		}
-		enableLock.unlock();
 		int messageCount = currMessageCount.get(id);
 		messageCount++;
-		UserInfo info = manager.infoMap.get(id);
-		if(info == null) {
-			info = new UserInfo(event.getAuthor().getIdLong(),0);
-		}
-		if(messageCount >= computeLevelUpLevels(info.getLevel())) {
+		int level = uConfig.getUserLevels(id);
+		if(messageCount >= computeLevelUpLevels(level)) {
 			messageCount = 0;
-			info.setLevel(info.getLevel()+1);
-			manager.infoMap.put(id, info);
+			uConfig.setUserLevels(id, level+1);
 			try {
-				manager.saveInfo();
+				uConfig.saveLevels(id);
 			} catch (Exception e) {
-				e.printStackTrace();
-				System.err.println("UwU program did an oopsie woopsie when it twiedd to swave the fwile");
+				logger.error("UwU program did an oopsie woopsie when it twiedd to swave the fwile", e.getCause());
 			}
-			event.getChannel().sendMessage("Congratulations "+event.getAuthor().getAsMention()+" for leveling up to level "+info.getLevel()+"!").queue();
+			event.getChannel().sendMessage("Congratulations "+event.getAuthor().getAsMention()+" for leveling up to level "+(level+1)+"!").queue();
 		}
 		currMessageCount.put(id, messageCount);
 	}
 	
 	@Override
 	public void onGuildMemberJoin(GuildMemberJoinEvent event) {
-		if(!swearWords.containsKey(event.getGuild().getIdLong())) {
-			try {
-				loadSwears(event.getGuild().getIdLong());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		List<String[]> swears = swearWords.get(event.getGuild().getIdLong());
-		for (int i = 0; i < swears.size(); i++) {
-			String[] data = swears.get(i);
-			if (data[1].equals("u") && event.getUser().getName().contains(data[0])) {
-				// Oh No!!! Swear word detected!
-				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " joined with a username with a disallowed word! Muting them and sending them a message!");
-				PrivateChannel channel = event.getUser().openPrivateChannel().complete();
-				channel.sendMessage("Hello! It appears you have a disallowed word in your username to join this server and because of this you have been muted!").queue();
-				
-				String roleName = (data.length >= 3 ? data[2] : "muted");
-				List<Role> roles = event.getGuild().getRolesByName(roleName, true);
-				for(Role r : roles) {
-					event.getGuild().addRoleToMember(event.getMember(), r).complete();
-				}
-				continue;
+		checkName(event.getGuild(), event.getMember());
+	}
+	private void checkName(Guild guild, Member member) {
+		SwearWord word = sConfig.isSwear(guild.getIdLong(), member.getNickname(), ActivationType.USER);
+		if(word != null) {
+			logger.info("\"" + guild.getName() + "\": " + member.getUser().getAsMention() + " joined with a username with a disallowed word! Muting them and sending them a message!");
+			PrivateChannel channel = member.getUser().openPrivateChannel().complete();
+			channel.sendMessage("Hello! It appears you have a disallowed word in your username to join this server and because of this you have been muted!").queue();
+			
+			String roleName = word.getMuteRole();
+			List<Role> roles = guild.getRolesByName(roleName, true);
+			for(Role r : roles) {
+				guild.addRoleToMember(member, r).complete();
 			}
 		}
 	}
@@ -194,32 +139,13 @@ public class Bot extends ListenerAdapter {
 		boolean admin = isAdmin(m);
 		if(!admin) {
 			long guildid = event.getGuild().getIdLong();
-			if(!swearWords.containsKey(guildid)) {
-				try {
-					loadSwears(guildid);
-				}catch(Exception e) {
-					System.out.println("Failed to load swear word file for server "+event.getGuild().getName()+" with id "+guildid+"! Creating empty one");
-					try {
-						File f = new File(SWEAR_FILE+"."+guildid);
-						f.createNewFile();
-						//PrintWriter p = new PrintWriter(new FileWriter(f,true));
-						//p.println("true");
-						//p.close();
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-					swearWords.put(guildid, new ArrayList<String[]>());
-				}
-			}
-			List<String[]> swears = swearWords.get(guildid);
-			for (int i = 0; i < swears.size(); i++) {
-				if (swears.get(i)[1].equals("m") && message.contains(swears.get(i)[0])) {
-					// Oh No!!! Swear word detected!
-					event.getMessage().delete().queue();
-					System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " sent a swear word to channel #" + event.getChannel().getName() + "! They said:\n"+message);
-					event.getChannel().sendMessage("Swear, you will not!").queue();
-					return;
-				}
+			SwearWord word = sConfig.isSwear(guildid, message, ActivationType.MESSAGE);
+			if(word != null) {
+				// Oh No!!! Swear word detected!
+				event.getMessage().delete().queue();
+				logger.info("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " sent a swear word to channel #" + event.getChannel().getName() + "! They said:\n"+message);
+				event.getChannel().sendMessage("Swear, you will not!").queue();
+				return;
 			}
 		}
 		try {
@@ -235,7 +161,7 @@ public class Bot extends ListenerAdapter {
 			}
 			if (message.startsWith("-roles")) {
 				final String rawMessage = event.getMessage().getContentRaw();
-				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+				logger.info("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
 						+ " created roles menu in channel #" + event.getChannel().getName() + " with roles \""
 						+ rawMessage.split(" ", 2)[1] + "\"!");
 				MessageBuilder mBuilder = new MessageBuilder("React to be assigned a role!");
@@ -254,31 +180,14 @@ public class Bot extends ListenerAdapter {
 				});
 				event.getMessage().delete().queue();
 				return;
-			}else if(message.startsWith("-addswear") || message.startsWith("-addmswear")) {
-				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+			}else if(message.startsWith("-addswear")) {
+				logger.info("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
 						+ " added message swear word(s) \""+message.split(" ",2)[1]+"\" in channel #" + event.getChannel().getName()+"\"!");
 				String[] swears = message.split(" ",2)[1].split(" ");
 				for(String s : swears) {
 					try {
-						addSwear(s.replaceAll("_", " ")+":m",event.getGuild().getIdLong());
-					}catch(Exception e) {
-						e.printStackTrace();
-						System.err.println("Failed to add swear word to file!");
-					}
-				}
-				return;
-			}else if(message.startsWith("-adduswear")) {
-				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
-						+ " added username swear word(s) \""+message.split(" ",2)[1]+"\" in channel #" + event.getChannel().getName()+"\"!");
-				String[] swears = message.split(" ",2)[1].split(" ");
-				for(String s : swears) {
-					try {
-						if(s.contains(":")) {
-							String[] split = s.split(":",2);
-							addSwear(split[0].replaceAll("_", " ")+":u:"+split[1], event.getGuild().getIdLong());
-						}else {
-							addSwear(s.replaceAll("_", " ")+":u",event.getGuild().getIdLong());
-						}
+						sConfig.addSwear(SwearWord.fromString(s.replaceAll("_", " ")),event.getGuild().getIdLong());
+						sConfig.saveSwears(event.getGuild().getIdLong());
 					}catch(Exception e) {
 						e.printStackTrace();
 						System.err.println("Failed to add swear word to file!");
@@ -286,22 +195,20 @@ public class Bot extends ListenerAdapter {
 				}
 				return;
 			}else if(message.startsWith("-help")) {
-				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+				logger.info("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
 						+ " requested the help menu in channel "+event.getChannel().getName()+"!");
 				String helpMessage = "-help\tShows this message\n"
 						+ "-roles <emoji and role names seperated by space>\tCreates a role selection dialogue\n"
-						+ "-addmswear <swear words seperated by space>\tAdds a swear word to the list of swears for checking against messages\n"
-						+ "-adduswear <swear words seperated by space>\tAdds a swear word to the list of swears for checking against usernames\n"
+						+ "-addswear <swear words seperated by space>\tAdds a swear word to the list of swears for checking against messages/usernames\n"
 						+ "Note: For the roles command the emoji name must be the same as the role name, however it is case insensitive and underscores are converted to spaces\n"
 						+ "Note: For all commands underscores are converted to spaces unless otherwise specified (emoji names, etc)";
 				event.getChannel().sendMessage(helpMessage).queue();
 				return;
 			}else if(message.equals("-reload")) {
-				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+				logger.info("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
 						+ " reloaded guild data in channel "+event.getChannel().getName()+"!");
 				try {
-					loadSwears(event.getGuild().getIdLong());
-					loadServers();
+					sConfig.loadSwears(event.getGuild().getIdLong());
 				} catch (Exception e) {
 					e.printStackTrace();
 					event.getChannel().sendMessage("Failed to reload swear word list").queue();
@@ -309,7 +216,7 @@ public class Bot extends ListenerAdapter {
 				}
 				event.getChannel().sendMessage("Reloaded swear words!").queue();
 			}else if(message.equals("-gid")) {
-				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+				logger.info("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
 						+ " requested the guild's id in channel "+event.getChannel().getName()+"!");
 				event.getChannel().sendMessage("This guild's id is "+event.getGuild().getIdLong()).queue();
 			}
@@ -334,7 +241,8 @@ public class Bot extends ListenerAdapter {
 		if (event.getMember().getUser().isBot())
 			return;
 		Message m = event.retrieveMessage().complete();
-		if(!m.getMember().getUser().isBot())
+		User u = m.getAuthor();
+		if(!u.isBot())
 			return;
 		if(!m.getContentRaw().startsWith("React to be assigned a role!"))
 			return;
