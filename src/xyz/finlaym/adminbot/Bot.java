@@ -1,11 +1,14 @@
 package xyz.finlaym.adminbot;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +41,14 @@ import xyz.finlaym.adminbot.storage.config.UserLevelConfig;
 
 public class Bot extends ListenerAdapter {
 
+	static {
+		try {
+			PropertyConfigurator.configure(new FileInputStream(new File("log4j.properties")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private static final File TOKEN_FILE = new File("token.priv");
 	private static final Logger logger = LoggerFactory.getLogger(Bot.class);
 	
