@@ -66,6 +66,8 @@ public class SwearsConfig {
 			}
 		}
 		List<SwearWord> swears = swearWords.get(guildId);
+		if(swears == null)
+			return null;
 		for (int i = 0; i < swears.size(); i++) {
 			SwearWord word = swears.get(i);
 			if ((word.getType() == type || type == ActivationType.ANY) && text.contains(word.getWord())) {
