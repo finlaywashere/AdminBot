@@ -23,7 +23,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
-import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
@@ -31,6 +30,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import xyz.finlaym.adminbot.action.swear.SwearWord;
 import xyz.finlaym.adminbot.action.swear.SwearWord.ActivationType;
@@ -70,6 +70,7 @@ public class Bot extends ListenerAdapter {
 		jda = JDABuilder.createDefault(token).addEventListeners(new Bot()).
 				setAutoReconnect(true).setActivity(Activity.watching("you")).
 				enableIntents(GatewayIntent.GUILD_MEMBERS).
+				setChunkingFilter(ChunkingFilter.NONE).
 				setMemberCachePolicy(MemberCachePolicy.ONLINE).build();
 		
 		sConfig = new SwearsConfig(dbInterface);
@@ -130,14 +131,16 @@ public class Bot extends ListenerAdapter {
 		SwearWord word = sConfig.isSwear(guild.getIdLong(), member.getNickname(), ActivationType.USER);
 		if(word != null) {
 			logger.info("\"" + guild.getName() + "\": " + member.getUser().getAsMention() + " joined with a username with a disallowed word! Muting them and sending them a message!");
-			PrivateChannel channel = member.getUser().openPrivateChannel().complete();
+			member.getUser().openPrivateChannel().queue(channel -> {
+				
 			channel.sendMessage("Hello! It appears you have a disallowed word in your username to join this server and because of this you have been muted!").queue();
 			
 			String roleName = word.getMuteRole();
 			List<Role> roles = guild.getRolesByName(roleName, true);
 			for(Role r : roles) {
-				guild.addRoleToMember(member, r).complete();
+				guild.addRoleToMember(member, r).queue();
 			}
+			});
 		}
 	}
 	
@@ -251,38 +254,40 @@ public class Bot extends ListenerAdapter {
 	public void onMessageReactionAdd(MessageReactionAddEvent event) {
 		if (event.getMember().getUser().isBot())
 			return;
-		Message m = event.retrieveMessage().complete();
-		User u = m.getAuthor();
-		if(!u.isBot())
-			return;
-		if(!m.getContentRaw().startsWith("React to be assigned a role!"))
-			return;
-		final MessageReaction reac = event.getReaction();
-		Message message = event.getChannel().retrieveMessageById(event.getMessageIdLong()).complete();
-		boolean found = false;
-		String name = reac.getReactionEmote().getName().replaceAll("_", " ").toLowerCase();
-		for (MessageReaction r : message.getReactions()) {
-			String name2 = r.getReactionEmote().getName().replaceAll("_", " ").toLowerCase();
-			if (name.equals(name2)) {
-				boolean bot = r.isSelf();
-				if (bot) {
-					found = true;
-					break;
+		event.retrieveMessage().queue(m -> {
+			User u = m.getAuthor();
+			if(!u.isBot())
+				return;
+			if(!m.getContentRaw().startsWith("React to be assigned a role!"))
+				return;
+			final MessageReaction reac = event.getReaction();
+			event.getChannel().retrieveMessageById(event.getMessageIdLong()).queue(message -> {
+				boolean found = false;
+				String name = reac.getReactionEmote().getName().replaceAll("_", " ").toLowerCase();
+				for (MessageReaction r : message.getReactions()) {
+					String name2 = r.getReactionEmote().getName().replaceAll("_", " ").toLowerCase();
+					if (name.equals(name2)) {
+						boolean bot = r.isSelf();
+						if (bot) {
+							found = true;
+							break;
+						}
+					}
 				}
-			}
-		}
-		if (!found) {
-			System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
-					+ " tried to react with an unapproved emoji!");
-			event.getReaction().removeReaction(event.getUser()).queue();
-			return;
-		}
-		// We know it is a valid role with good permissions 'n' stuff because the bot
-		// reacted it too
-		for (Role r : event.getGuild().getRolesByName(name, true)) {
-			System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
-					+ " given role " + r.getName() + "!");
-			event.getGuild().addRoleToMember(event.getMember(), r).queue();
-		}
+				if (!found) {
+					System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+							+ " tried to react with an unapproved emoji!");
+					event.getReaction().removeReaction(event.getUser()).queue();
+					return;
+				}
+				// We know it is a valid role with good permissions 'n' stuff because the bot
+				// reacted it too
+				for (Role r : event.getGuild().getRolesByName(name, true)) {
+					System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+							+ " given role " + r.getName() + "!");
+					event.getGuild().addRoleToMember(event.getMember(), r).queue();
+				}
+			});
+		});
 	}
 }
