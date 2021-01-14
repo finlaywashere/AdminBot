@@ -12,8 +12,6 @@ import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDA.Status;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -56,7 +54,6 @@ public class Bot extends ListenerAdapter {
 	private static DBInterface dbInterface;
 	
 	private static Map<Long,Integer> currMessageCount = new HashMap<Long,Integer>();
-	private static JDA jda;
 	private static SwearsConfig sConfig;
 	private static UserLevelConfig uConfig;
 	private static ServerConfig seConfig;
@@ -67,7 +64,7 @@ public class Bot extends ListenerAdapter {
 		in.close();
 		dbInterface = new DBInterface();
 		dbInterface.init("adminbot", "bot", "bot");
-		jda = JDABuilder.createDefault(token).addEventListeners(new Bot()).
+		JDABuilder.createDefault(token).addEventListeners(new Bot()).
 				setAutoReconnect(true).setActivity(Activity.watching("you")).
 				enableIntents(GatewayIntent.GUILD_MEMBERS).
 				setChunkingFilter(ChunkingFilter.NONE).
@@ -76,15 +73,6 @@ public class Bot extends ListenerAdapter {
 		sConfig = new SwearsConfig(dbInterface);
 		uConfig = new UserLevelConfig(dbInterface);
 		seConfig = new ServerConfig(dbInterface);
-		
-		while(true) {
-			if(jda.getStatus() == Status.ATTEMPTING_TO_RECONNECT) {
-				logger.warn("Disconnected from Discord! Forcing reconnect!");
-				jda.cancelRequests();
-				jda = JDABuilder.createDefault(token).addEventListeners(new Bot()).setAutoReconnect(true).setActivity(Activity.watching("you")).build();
-			}
-			Thread.sleep(60000);
-		}
 	}
 
 	public static int computeLevelUpLevels(int currLevel) {
