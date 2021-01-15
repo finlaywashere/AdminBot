@@ -113,7 +113,9 @@ public class Bot extends ListenerAdapter {
 	
 	@Override
 	public void onGuildMemberJoin(GuildMemberJoinEvent event) {
+		long curr = System.currentTimeMillis();
 		checkName(event.getGuild(), event.getMember());
+		logger.debug("onGuildMemberJoin took "+(System.currentTimeMillis()-curr)+"ms");
 	}
 	private void checkName(Guild guild, Member member) {
 		SwearWord word = sConfig.isSwear(guild.getIdLong(), member.getNickname(), ActivationType.USER);
@@ -242,40 +244,40 @@ public class Bot extends ListenerAdapter {
 	public void onMessageReactionAdd(MessageReactionAddEvent event) {
 		if (event.getMember().getUser().isBot())
 			return;
-		event.retrieveMessage().queue(m -> {
-			User u = m.getAuthor();
+		long curr = System.currentTimeMillis();
+		event.retrieveMessage().queue(message -> {
+			User u = message.getAuthor();
 			if(!u.isBot())
 				return;
-			if(!m.getContentRaw().startsWith("React to be assigned a role!"))
+			if(!message.getContentRaw().startsWith("React to be assigned a role!"))
 				return;
 			final MessageReaction reac = event.getReaction();
-			event.getChannel().retrieveMessageById(event.getMessageIdLong()).queue(message -> {
-				boolean found = false;
-				String name = reac.getReactionEmote().getName().replaceAll("_", " ").toLowerCase();
-				for (MessageReaction r : message.getReactions()) {
-					String name2 = r.getReactionEmote().getName().replaceAll("_", " ").toLowerCase();
-					if (name.equals(name2)) {
-						boolean bot = r.isSelf();
-						if (bot) {
-							found = true;
-							break;
-						}
+			boolean found = false;
+			String name = reac.getReactionEmote().getName().replaceAll("_", " ").toLowerCase();
+			for (MessageReaction r : message.getReactions()) {
+				String name2 = r.getReactionEmote().getName().replaceAll("_", " ").toLowerCase();
+				if (name.equals(name2)) {
+					boolean bot = r.isSelf();
+					if (bot) {
+						found = true;
+						break;
 					}
 				}
-				if (!found) {
-					System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
-							+ " tried to react with an unapproved emoji!");
-					event.getReaction().removeReaction(event.getUser()).queue();
-					return;
-				}
-				// We know it is a valid role with good permissions 'n' stuff because the bot
-				// reacted it too
-				for (Role r : event.getGuild().getRolesByName(name, true)) {
-					System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
-							+ " given role " + r.getName() + "!");
-					event.getGuild().addRoleToMember(event.getMember(), r).queue();
-				}
-			});
+			}
+			if (!found) {
+				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+						+ " tried to react with an unapproved emoji!");
+				event.getReaction().removeReaction(event.getUser()).queue();
+				return;
+			}
+			// We know it is a valid role with good permissions 'n' stuff because the bot
+			// reacted it too
+			for (Role r : event.getGuild().getRolesByName(name, true)) {
+				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag()
+						+ " given role " + r.getName() + "!");
+				event.getGuild().addRoleToMember(event.getMember(), r).queue();
+			}
 		});
+		logger.debug("onMessageReactionAdd took "+(System.currentTimeMillis()-curr)+"ms");
 	}
 }
