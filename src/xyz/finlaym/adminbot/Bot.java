@@ -136,6 +136,7 @@ public class Bot extends ListenerAdapter {
 	
 	@Override
 	public void onMessageReceived(final MessageReceivedEvent event) {
+		long curr = System.currentTimeMillis();
 		if (event.getAuthor().isBot())
 			return;
 		String message = event.getMessage().getContentRaw().toLowerCase();
@@ -158,6 +159,7 @@ public class Bot extends ListenerAdapter {
 			e.printStackTrace();
 			System.err.println("OwO *flips table* I did an oopsie woopsie and bwoke!");
 		}
+		logger.debug("onMessageReceived standard checks took "+(System.currentTimeMillis()-curr)+"ms");
 		if (message.startsWith("-")) {
 			if (!admin) {
 				System.out.println("\"" + event.getGuild().getName() + "\": " + event.getMember().getUser().getAsTag() + " tried to execute command in channel #"+ event.getChannel().getName() + " with insufficient permissions! Command: "+event.getMessage().getContentRaw());
