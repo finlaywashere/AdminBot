@@ -5,11 +5,15 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import xyz.finlaym.adminbot.action.permission.Permission;
 import xyz.finlaym.adminbot.action.swear.SwearWord;
+import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
 import xyz.finlaym.adminbot.storage.config.UserLevelConfig;
@@ -69,25 +73,64 @@ public class DBInterface {
 			statement.executeUpdate();
 		}
 	}
-	public void loadUserLevels(long id, UserLevelConfig uConf) throws Exception{
+	public void loadUserLevels(long gid, long id, UserLevelConfig uConf) throws Exception{
 		Statement statement = conn.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\";");
+		ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
 		if(rs.getFetchSize() == 0)
 			return;
-		uConf.setUserLevels(rs.getLong("id"), rs.getInt("level"));
+		uConf.setUserLevels(rs.getLong("gid"),rs.getLong("id"), rs.getInt("level"));
 	}
-	public void saveUserLevels(long id, UserLevelConfig uConf) throws Exception{
+	public void saveUserLevels(long gid, long id, UserLevelConfig uConf) throws Exception{
 		Statement statement = conn.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\";");
+		ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
 		if(rs.getFetchSize() == 0) {
-			PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_levels` (`id`, `level`) VALUES(?, ?);");
-			pS.setLong(1, id);
-			pS.setInt(2, uConf.getUserLevels(id));
+			PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_levels` (`gid`, `id`, `level`) VALUES(?, ?, ?);");
+			pS.setLong(1, gid);
+			pS.setLong(2, id);
+			pS.setInt(3, uConf.getUserLevels(gid,id));
 			pS.executeUpdate();
 		}else {
-			PreparedStatement pS = conn.prepareStatement("UPDATE `user_levels` SET `level`=? WHERE `id`=?;");
+			PreparedStatement pS = conn.prepareStatement("UPDATE `user_levels` SET `level`=? WHERE `id`=? AND `gid`=?;");
 			pS.setLong(2, id);
-			pS.setInt(1, uConf.getUserLevels(id));
+			pS.setLong(3, gid);
+			pS.setInt(1, uConf.getUserLevels(gid,id));
+			pS.executeUpdate();
+		}
+	}
+
+	public void loadPermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
+		Statement statement = conn.createStatement();
+		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
+		if(rs.getFetchSize() == 0)
+			return;
+		List<Permission> perms = new ArrayList<Permission>();
+		for(String s : rs.getString("permissions").split(":")) {
+			perms.add(new Permission(s));
+		}
+		pConfig.setUserPerms(rs.getLong("gid"), rs.getLong("id"), perms);
+	}
+	public void savePermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
+		String result = "";
+		List<Permission> perms = pConfig.getUserPerms(gid,id);
+		for(int i = 0; i < perms.size(); i++) {
+			if(i != 0)
+				result += ":"+perms.get(i).toString();
+			else
+				result += perms.get(i).toString();
+		}
+		Statement statement = conn.createStatement();
+		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
+		if(rs.getFetchSize() == 0) {
+			PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_perms` (`gid`, `id`, `permissions`) VALUES(?,?, ?);");
+			pS.setLong(2, id);
+			pS.setLong(1, gid);
+			pS.setString(3, result);
+			pS.executeUpdate();
+		}else {
+			PreparedStatement pS = conn.prepareStatement("UPDATE `user_perms` SET `permissions`=? WHERE `id`=? AND `gid`=?;");
+			pS.setLong(2, id);
+			pS.setLong(3, gid);
+			pS.setString(1, result);
 			pS.executeUpdate();
 		}
 	}

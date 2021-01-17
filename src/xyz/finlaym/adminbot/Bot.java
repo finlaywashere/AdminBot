@@ -89,6 +89,7 @@ public class Bot extends ListenerAdapter {
 	}
 	public void countMessages(MessageReceivedEvent event) {
 		long id = event.getAuthor().getIdLong();
+		long gid = event.getGuild().getIdLong();
 		if(!seConfig.getLevelsEnabled(id))
 			return;
 		if(!currMessageCount.containsKey(id)) {
@@ -97,12 +98,12 @@ public class Bot extends ListenerAdapter {
 		}
 		int messageCount = currMessageCount.get(id);
 		messageCount++;
-		int level = uConfig.getUserLevels(id);
+		int level = uConfig.getUserLevels(gid, id);
 		if(messageCount >= computeLevelUpLevels(level)) {
 			messageCount = 0;
-			uConfig.setUserLevels(id, level+1);
+			uConfig.setUserLevels(gid, id, level+1);
 			try {
-				uConfig.saveLevels(id);
+				uConfig.saveLevels(gid, id);
 			} catch (Exception e) {
 				logger.error("UwU program did an oopsie woopsie when it twiedd to swave the fwile", e.getCause());
 			}
