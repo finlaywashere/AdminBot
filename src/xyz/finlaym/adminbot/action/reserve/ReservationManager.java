@@ -22,21 +22,24 @@ public class ReservationManager extends ListenerAdapter{
 		VoiceChannel vc = event.getChannelLeft();
 		if(vc.getMembers().size() == 0) {
 			// Everyone left the VC
-			long id = vc.getIdLong();
-			if(states.containsKey(id)) {
-				ChannelManager manager = vc.getManager();
-				
-				for(PermissionOverride p : vc.getPermissionOverrides()) {
-					manager.removePermissionOverride(p.getPermissionHolder());
-				}
-				
-				for(PermissionState state : states.get(id).getPrevState()){
-					manager.putPermissionOverride(state.getHolder(), state.getAllowed(), state.getDenied());
-				}
-				
-				manager.queue();
-				states.remove(id);
+			removeReservation(vc);
+		}
+	}
+	public void removeReservation(VoiceChannel vc) {
+		long id = vc.getIdLong();
+		if(states.containsKey(id)) {
+			ChannelManager manager = vc.getManager();
+			
+			for(PermissionOverride p : vc.getPermissionOverrides()) {
+				manager.removePermissionOverride(p.getPermissionHolder());
 			}
+			
+			for(PermissionState state : states.get(id).getPrevState()){
+				manager.putPermissionOverride(state.getHolder(), state.getAllowed(), state.getDenied());
+			}
+			
+			manager.queue();
+			states.remove(id);
 		}
 	}
 	public Map<Long, ChannelState> getStates() {
