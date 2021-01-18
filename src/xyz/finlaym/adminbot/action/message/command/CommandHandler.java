@@ -14,8 +14,10 @@ import xyz.finlaym.adminbot.action.message.command.commands.AddSwearCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.GuildInfoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.HelpCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.ReloadCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.ReserveChannelCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.RolesMenuCommand;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
+import xyz.finlaym.adminbot.utils.LoggerHelper;
 
 public class CommandHandler {
 	
@@ -33,7 +35,7 @@ public class CommandHandler {
 		this.commands.add(new AddSwearCommand());
 		this.commands.add(new ReloadCommand());
 		this.commands.add(new RolesMenuCommand());
-		
+		this.commands.add(new ReserveChannelCommand());	
 	}
 	public Bot getBot() {
 		return bot;
@@ -48,11 +50,11 @@ public class CommandHandler {
 		for(Command c : commands) {
 			if(command[0].equalsIgnoreCase(c.getName())) {
 				if(pConfig.checkPermission(channel.getGuild().getIdLong(), member, c.getPermission())) {
-					logger.info("Guild "+channel.getGuild().getIdLong()+" (\""+channel.getGuild().getName()+"\"): User "+member.getIdLong()+" (\""+member.getUser().getAsTag()+"\") successfully executed command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");
+					LoggerHelper.log(logger, channel.getGuild(), channel, member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");
 					c.execute(member, channel, command, this, message);
 					return;
 				}else {
-					logger.info("Guild "+channel.getGuild().getIdLong()+" (\""+channel.getGuild().getName()+"\"): User "+member.getIdLong()+" (\""+member.getUser().getAsTag()+"\") tried do executed command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");
+					LoggerHelper.log(logger, channel.getGuild(), channel, member.getUser(), "tried to execute command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");
 					channel.sendMessage("Error: Insufficient permissions to execute command!").queue();
 					return;
 				}

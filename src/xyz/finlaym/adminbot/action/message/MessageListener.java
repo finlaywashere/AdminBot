@@ -15,6 +15,7 @@ import xyz.finlaym.adminbot.action.message.command.CommandHandler;
 import xyz.finlaym.adminbot.action.message.level.LevelHandler;
 import xyz.finlaym.adminbot.action.message.swear.SwearHandler;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
+import xyz.finlaym.adminbot.utils.LoggerHelper;
 
 public class MessageListener extends ListenerAdapter{
 	
@@ -49,7 +50,6 @@ public class MessageListener extends ListenerAdapter{
 			logger.error("OwO *flips table* I did an oopsie woopsie and bwoke!");
 		}
 		long gid = channel.getGuild().getIdLong();
-		long uid = author.getIdLong();
 		PermissionsConfig pConfig = bot.getPermissionsConfig();
 		boolean swearOverride = pConfig.checkPermission(gid, member, "override.swear");
 		if(!swearOverride) {
@@ -58,7 +58,7 @@ public class MessageListener extends ListenerAdapter{
 			if(swear) {
 				message.delete().queue();
 				channel.sendMessage("Swear, you will not!").queue();
-				logger.info("Guild "+gid+" (\""+channel.getGuild().getName()+"\"): User "+uid+" (\""+author.getAsTag()+"\") said swear word in channel \""+channel.getName()+"\", contents: \""+message.getContentRaw()+"\"");
+				LoggerHelper.log(logger, channel.getGuild(),channel, author, "said a swear word in channel \""+channel.getName()+"\", contents: \""+message.getContentRaw()+"\"");
 			}
 		}
 		if(message.getContentRaw().startsWith("-")) {

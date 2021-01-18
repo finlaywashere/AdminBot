@@ -57,9 +57,9 @@ public class Bot extends ListenerAdapter {
 		dbInterface.init("adminbot", "bot", "bot");
 		JDABuilder.createDefault(token).addEventListeners(new MessageListener(this), new ReactionListener()).
 				setAutoReconnect(true).setActivity(Activity.watching("you")).
-				enableIntents(GatewayIntent.GUILD_MEMBERS).
+				enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES).
 				setChunkingFilter(ChunkingFilter.NONE).
-				setMemberCachePolicy(MemberCachePolicy.ONLINE).build();
+				setMemberCachePolicy(MemberCachePolicy.ALL).build();
 		
 		sConfig = new SwearsConfig(dbInterface);
 		uConfig = new UserLevelConfig(dbInterface);
