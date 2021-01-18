@@ -37,8 +37,17 @@ jar {
       )
     }
 }
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+task libJar(type: ShadowJar) {
+    classifier = 'lib'
+    from sourceSets.main.output
+    exclude 'xyz/finlaym/adminbot/**'
+    configurations = [project.configurations.runtime]
+}
 
 application {
     // Define the main class for the application
     mainClassName = 'xyz.finlaym.adminbot.Bot'
 }
+
+build.dependsOn libJar
