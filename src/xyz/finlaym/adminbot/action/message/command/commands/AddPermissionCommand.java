@@ -24,6 +24,13 @@ public class AddPermissionCommand extends Command{
 			Role r = message.getMentionedRoles().get(0);
 			List<Member> members = channel.getGuild().getMembersWithRoles(r);
 			for(Member m : members) {
+				if(pConfig.getUserPerms(channel.getGuild().getIdLong(), member.getIdLong()) == null) {
+					try {
+						pConfig.loadPermissions(channel.getGuild().getIdLong(),member.getIdLong());
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+				}
 				for(int i = 2; i < command.length; i++) {
 					pConfig.addPermission(m.getGuild().getIdLong(), m.getIdLong(), new Permission(command[i]));
 				}
@@ -35,6 +42,13 @@ public class AddPermissionCommand extends Command{
 			}
 		}else if(message.getMentionedMembers().size() == 1){
 			Member m = message.getMentionedMembers().get(0);
+			if(pConfig.getUserPerms(channel.getGuild().getIdLong(), m.getIdLong()) == null) {
+				try {
+					pConfig.loadPermissions(channel.getGuild().getIdLong(),m.getIdLong());
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
 			for(int i = 2; i < command.length; i++) {
 				pConfig.addPermission(m.getGuild().getIdLong(), m.getIdLong(), new Permission(command[i]));
 			}

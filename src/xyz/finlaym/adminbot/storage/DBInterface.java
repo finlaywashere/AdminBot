@@ -34,7 +34,8 @@ public class DBInterface {
 	public void getServerConfig(long id, ServerConfig sConfig) throws Exception{
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `server_config` WHERE `id`=\""+id+"\";");
-		if(rs.getFetchSize() == 0)
+		rs.next();
+		if(rs.isAfterLast())
 			return;
 		sConfig.setLevelsEnabled(rs.getLong("id"),rs.getBoolean("levelsEnabled"));
 		rs.close();
@@ -42,7 +43,8 @@ public class DBInterface {
 	public void saveServerConfig(long id, ServerConfig sConfig) throws Exception{
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `server_config` WHERE `id`=\""+id+"\";");
-		if(rs.getFetchSize() == 0) {
+		rs.last();
+		if(rs.getRow() == 0) {
 			PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `levelsEnabled`) VALUES(?,?);");
 			pS.setLong(1, id);
 			pS.setBoolean(2, sConfig.getLevelsEnabled(id));
@@ -76,14 +78,16 @@ public class DBInterface {
 	public void loadUserLevels(long gid, long id, UserLevelConfig uConf) throws Exception{
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
-		if(rs.getFetchSize() == 0)
+		rs.next();
+		if(rs.isAfterLast())
 			return;
 		uConf.setUserLevels(rs.getLong("gid"),rs.getLong("id"), rs.getInt("level"));
 	}
 	public void saveUserLevels(long gid, long id, UserLevelConfig uConf) throws Exception{
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
-		if(rs.getFetchSize() == 0) {
+		rs.last();
+		if(rs.getRow() == 0) {
 			PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_levels` (`gid`, `id`, `level`) VALUES(?, ?, ?);");
 			pS.setLong(1, gid);
 			pS.setLong(2, id);
@@ -101,7 +105,8 @@ public class DBInterface {
 	public void loadPermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
-		if(rs.getFetchSize() == 0)
+		rs.next();
+		if(rs.isAfterLast())
 			return;
 		List<Permission> perms = new ArrayList<Permission>();
 		for(String s : rs.getString("permissions").split(":")) {
@@ -122,7 +127,8 @@ public class DBInterface {
 		}
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
-		if(rs.getFetchSize() == 0) {
+		rs.last();
+		if(rs.getRow() == 0) {
 			PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_perms` (`gid`, `id`, `permissions`) VALUES(?,?, ?);");
 			pS.setLong(2, id);
 			pS.setLong(1, gid);
