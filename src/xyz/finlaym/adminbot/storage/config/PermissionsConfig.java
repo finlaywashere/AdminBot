@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import xyz.finlaym.adminbot.action.permission.Permission;
 import xyz.finlaym.adminbot.storage.DBInterface;
 
@@ -35,9 +37,22 @@ public class PermissionsConfig {
 	public void savePermissions(long gid, long id) throws Exception{
 		dbInterface.savePermissions(gid, id,this);
 	}
+	public boolean hasAdmin(Member m) {
+		for(Role r : m.getRoles()) {
+			if(r.hasPermission(net.dv8tion.jda.api.Permission.ADMINISTRATOR) || m.isOwner())
+				return true;
+		}
+		return false;
+	}
+	public boolean checkPermission(long gid, Member m, String permission) {
+		return checkPermission(gid, m.getIdLong(), permission, hasAdmin(m));
+	}
+	public boolean checkPermission(long gid, long user, String permission, boolean admin) {
+		return checkPermission(gid, user, permission) | admin;
+	}
 	public boolean checkPermission(long gid, long user, String permission) {
 		List<Permission> perms = getUserPerms(gid,user);
-		if(perms.size() == 0)
+		if(perms == null || perms.size() == 0)
 			return false;
 		for(Permission p : perms) {
 			if(!p.checkPermission(permission))

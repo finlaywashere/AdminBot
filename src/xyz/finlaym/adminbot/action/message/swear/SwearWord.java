@@ -1,4 +1,4 @@
-package xyz.finlaym.adminbot.action.swear;
+package xyz.finlaym.adminbot.action.message.swear;
 
 public class SwearWord {
 	private ActivationType type;
