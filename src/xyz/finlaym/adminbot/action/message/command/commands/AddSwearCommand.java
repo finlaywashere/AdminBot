@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
-import xyz.finlaym.adminbot.action.swear.SwearWord;
+import xyz.finlaym.adminbot.action.message.swear.SwearWord;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
 
 public class AddSwearCommand extends Command {

@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import xyz.finlaym.adminbot.action.permission.Permission;
-import xyz.finlaym.adminbot.action.swear.SwearWord;
+import xyz.finlaym.adminbot.action.message.swear.SwearWord;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;

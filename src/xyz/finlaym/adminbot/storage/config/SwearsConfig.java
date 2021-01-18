@@ -8,8 +8,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import xyz.finlaym.adminbot.action.swear.SwearWord;
-import xyz.finlaym.adminbot.action.swear.SwearWord.ActivationType;
+import xyz.finlaym.adminbot.action.message.swear.SwearWord;
+import xyz.finlaym.adminbot.action.message.swear.SwearWord.ActivationType;
 import xyz.finlaym.adminbot.storage.DBInterface;
 
 public class SwearsConfig {
