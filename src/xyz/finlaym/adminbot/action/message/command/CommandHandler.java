@@ -10,10 +10,12 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.Bot;
+import xyz.finlaym.adminbot.action.message.command.commands.AddPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.AddSwearCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.GuildInfoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.HelpCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.ReloadCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.RemovePermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.ReserveChannelCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.RolesMenuCommand;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
@@ -36,6 +38,8 @@ public class CommandHandler {
 		this.commands.add(new ReloadCommand());
 		this.commands.add(new RolesMenuCommand());
 		this.commands.add(new ReserveChannelCommand());	
+		this.commands.add(new AddPermissionCommand());
+		this.commands.add(new RemovePermissionCommand());
 	}
 	public Bot getBot() {
 		return bot;

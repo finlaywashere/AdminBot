@@ -112,6 +112,8 @@ public class DBInterface {
 	public void savePermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
 		String result = "";
 		List<Permission> perms = pConfig.getUserPerms(gid,id);
+		if(perms == null)
+			return;
 		for(int i = 0; i < perms.size(); i++) {
 			if(i != 0)
 				result += ":"+perms.get(i).toString();
