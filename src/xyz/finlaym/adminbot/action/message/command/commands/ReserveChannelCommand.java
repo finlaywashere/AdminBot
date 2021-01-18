@@ -1,9 +1,7 @@
 package xyz.finlaym.adminbot.action.message.command.commands;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -16,14 +14,13 @@ import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.managers.ChannelManager;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.reserve.ChannelState;
+import xyz.finlaym.adminbot.action.reserve.PermissionState;
 
 public class ReserveChannelCommand extends Command{
-
-	private Map<Long,ChannelState> states;
 	
 	public ReserveChannelCommand() {
 		super("reserve", "command.reserve", "-reserve <@users...>", "Makes the current voice channel only accessible by a set of users");
-		states = new HashMap<Long,ChannelState>();
 	}
 
 	@Override
@@ -35,7 +32,11 @@ public class ReserveChannelCommand extends Command{
 		}
 		VoiceChannel vc = member.getVoiceState().getChannel();
 		List<PermissionOverride> overrides = vc.getPermissionOverrides();
-		states.put(vc.getIdLong(), new ChannelState(overrides));
+		List<PermissionState> states = new ArrayList<PermissionState>();
+		for(PermissionOverride o : overrides) {
+			states.add(new PermissionState(o.getAllowed(), o.getDenied(), o.getPermissionHolder()));
+		}
+		handler.getBot().getReservationManager().getStates().put(vc.getIdLong(), new ChannelState(states));
 		ChannelManager manager = vc.getManager();
 		for(PermissionOverride p : vc.getPermissionOverrides()) {
 			manager.removePermissionOverride(p.getPermissionHolder());
@@ -53,15 +54,5 @@ public class ReserveChannelCommand extends Command{
 		}
 		manager.queue();
 		channel.sendMessage("Successfully reserved channel!").queue();
-	}
-	private class ChannelState{
-		private List<PermissionOverride> prevState;
-
-		public ChannelState(List<PermissionOverride> prevState) {
-			this.prevState = prevState;
-		}
-		public List<PermissionOverride> getPrevState() {
-			return prevState;
-		}
 	}
 }

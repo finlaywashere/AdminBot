@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import xyz.finlaym.adminbot.action.message.MessageListener;
 import xyz.finlaym.adminbot.action.reaction.ReactionListener;
+import xyz.finlaym.adminbot.action.reserve.ReservationManager;
 import xyz.finlaym.adminbot.storage.DBInterface;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
@@ -45,6 +46,7 @@ public class Bot extends ListenerAdapter {
 	private UserLevelConfig uConfig;
 	private ServerConfig seConfig;
 	private PermissionsConfig pConfig;
+	private ReservationManager rManager;
 	
 	public static void main(String[] args) throws Exception {
 		INSTANCE = new Bot();
@@ -55,7 +57,8 @@ public class Bot extends ListenerAdapter {
 		in.close();
 		dbInterface = new DBInterface();
 		dbInterface.init("adminbot", "bot", "bot");
-		JDABuilder.createDefault(token).addEventListeners(new MessageListener(this), new ReactionListener()).
+		rManager = new ReservationManager();
+		JDABuilder.createDefault(token).addEventListeners(new MessageListener(this), new ReactionListener(), rManager).
 				setAutoReconnect(true).setActivity(Activity.watching("you")).
 				enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES).
 				setChunkingFilter(ChunkingFilter.NONE).
@@ -79,5 +82,8 @@ public class Bot extends ListenerAdapter {
 	}
 	public PermissionsConfig getPermissionsConfig() {
 		return pConfig;
+	}
+	public ReservationManager getReservationManager() {
+		return rManager;
 	}
 }
