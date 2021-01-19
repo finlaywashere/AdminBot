@@ -1,4 +1,4 @@
-package xyz.finlaym.adminbot.action.message.command.commands;
+package xyz.finlaym.adminbot.action.message.command.commands.admin;
 
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;

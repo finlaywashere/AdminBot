@@ -1,4 +1,4 @@
-package xyz.finlaym.adminbot.action.message.command.commands;
+package xyz.finlaym.adminbot.action.message.command.commands.debug;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
