@@ -86,9 +86,9 @@ public class PermissionsConfig {
 		if(perms == null || perms.size() == 0)
 			return false;
 		for(Permission p : perms) {
-			if(!p.checkPermission(permission))
-				return false;
+			if(p.checkPermission(permission))
+				return true;
 		}
-		return true;
+		return false;
 	}
 }
