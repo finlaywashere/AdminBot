@@ -106,11 +106,13 @@ public class DBInterface {
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
 		rs.next();
-		if(rs.isAfterLast())
-			return;
 		List<Permission> perms = new ArrayList<Permission>();
-		for(String s : rs.getString("permissions").split(":")) {
-			perms.add(new Permission(s));
+		try {
+			for(String s : rs.getString("permissions").split(":")) {
+				perms.add(new Permission(s));
+			}
+		}catch(Exception e) {
+			return;
 		}
 		pConfig.setUserPerms(rs.getLong("gid"), rs.getLong("id"), perms);
 	}

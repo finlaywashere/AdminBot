@@ -10,8 +10,8 @@ public class Permission {
 		return permission;
 	}
 	public boolean checkPermission(String permission2) {
-		String[] split1 = permission.split(".");
-		String[] split2 = permission.split(".");
+		String[] split1 = permission.split("\\.");
+		String[] split2 = permission2.split("\\.");
 		if(split2.length < split1.length)
 			return false;
 		for(int i = 0; i < split1.length; i++) {

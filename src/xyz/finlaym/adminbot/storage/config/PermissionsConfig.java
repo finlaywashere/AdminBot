@@ -19,10 +19,14 @@ public class PermissionsConfig {
 		this.userPerms = new HashMap<Long,Map<Long,List<Permission>>>();
 	}
 	
-	public List<Permission> getUserPerms(long gid, long id){
+	public List<Permission> getUserPerms(long gid, long id) throws Exception{
 		Map<Long,List<Permission>> p2 = userPerms.get(gid);
-		if(p2 == null)
-			return null;
+		if(p2 == null) {
+			loadPermissions(gid, id);
+			p2 = userPerms.get(gid);
+			if(p2 == null)
+				return null;
+		}
 		return p2.get(id);
 	}
 	public void setUserPerms(long gid, long id, List<Permission> perms) {
@@ -67,13 +71,13 @@ public class PermissionsConfig {
 		}
 		return false;
 	}
-	public boolean checkPermission(long gid, Member m, String permission) {
+	public boolean checkPermission(long gid, Member m, String permission) throws Exception {
 		return checkPermission(gid, m.getIdLong(), permission, hasAdmin(m));
 	}
-	public boolean checkPermission(long gid, long user, String permission, boolean admin) {
+	public boolean checkPermission(long gid, long user, String permission, boolean admin) throws Exception {
 		return checkPermission(gid, user, permission) | admin;
 	}
-	public boolean checkPermission(long gid, long user, String permission) {
+	public boolean checkPermission(long gid, long user, String permission) throws Exception {
 		if(user != 0) {
 			if(checkPermission(gid, 0, permission)) // Check default permissions for guild
 				return true;

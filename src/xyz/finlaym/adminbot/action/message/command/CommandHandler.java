@@ -49,7 +49,7 @@ public class CommandHandler {
 	public List<Command> getCommands() {
 		return commands;
 	}
-	public void handleCommand(Member member, TextChannel channel, String[] command, Message message) {
+	public void handleCommand(Member member, TextChannel channel, String[] command, Message message) throws Exception {
 		if(command.length == 0)
 			return;
 		PermissionsConfig pConfig = bot.getPermissionsConfig();
