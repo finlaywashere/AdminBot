@@ -20,30 +20,32 @@ public class RemovePermissionCommand extends Command{
 	@Override
 	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
 		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
+		GroupIdentifier id = null;
 		if(message.getMentionedRoles().size() == 1) {
 			Role r = message.getMentionedRoles().get(0);
-			GroupIdentifier identifier = new GroupIdentifier(Group.TYPE_ROLE, r.getIdLong());
-			for(int i = 2; i < command.length; i++) {
-				pConfig.removeGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[i]));
-			}
-			try {
-				pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			id = new GroupIdentifier(Group.TYPE_ROLE, r.getIdLong());
 		}else if(message.getMentionedMembers().size() == 1){
 			Member m = message.getMentionedMembers().get(0);
-			for(int i = 2; i < command.length; i++) {
-				pConfig.removeUserPermission(m.getGuild().getIdLong(), m.getIdLong(), new Permission(command[i]));
-			}
-			try {
-				pConfig.saveUserPermissions(m.getGuild().getIdLong(), m.getIdLong());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}else {
+			id = new GroupIdentifier(Group.TYPE_USER, m.getIdLong());
+		}
+		if(id == null){
 			channel.sendMessage("You must mention one role/user to remove permissions from!").queue();
 			return;
+		}
+		try {
+			if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), id) == null) {
+				pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),id);
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		for(int i = 2; i < command.length; i++) {
+			pConfig.removeGroupPermission(channel.getGuild().getIdLong(), id, new Permission(command[i]));
+		}
+		try {
+			pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), id);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		channel.sendMessage("Successfully removed permission(s) from users/roles!").queue();
 	}

@@ -13,7 +13,7 @@ import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 public class ModifyPermissionsRawCommand extends Command {
 
 	public ModifyPermissionsRawCommand() {
-		super("modifypermission", "command.modifypermission", "-modifypermission <action> <id type> <id> permission", "Modify raw permission values for a user/group");
+		super("modifypermission", "command.modifypermission", "-modifypermission <action> <id type> <id> <permission>", "Modify raw permission values for a user/group");
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class ModifyPermissionsRawCommand extends Command {
 			identifier = new GroupIdentifier(Group.TYPE_ROLE, Long.valueOf(command[3]));
 			break;
 		case "user":
-			identifier = new GroupIdentifier(Group.TYPE_NONGROUP, Long.valueOf(command[3]));
+			identifier = new GroupIdentifier(Group.TYPE_USER, Long.valueOf(command[3]));
 			break;
 		default:
 			channel.sendMessage("Error: Invalid id type\nValid id types are: role, user");
@@ -41,57 +41,40 @@ public class ModifyPermissionsRawCommand extends Command {
 		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
 		switch(command[1].toLowerCase()) {
 		case "add":
-			if(identifier.getType() != Group.TYPE_NONGROUP) {
-				try {
-					if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
-						pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);
-					}
-				} catch (Exception e1) {
-					e1.printStackTrace();
+			try {
+				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
+					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);
 				}
-				pConfig.addGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[4]));
-				try {
-					pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}else {
-				try {
-					if(pConfig.getUserPerms(channel.getGuild().getIdLong(), identifier.getIdentifier()) == null) {
-						pConfig.loadUserPermissions(channel.getGuild().getIdLong(),identifier.getIdentifier());
-					}
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				pConfig.addUserPermission(channel.getGuild().getIdLong(), identifier.getIdentifier(), new Permission(command[4]));
-				try {
-					pConfig.saveUserPermissions(channel.getGuild().getIdLong(), identifier.getIdentifier());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			pConfig.addGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[4]));
+			try {
+				pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			break;
 		case "remove":
-			if(identifier.getType() != Group.TYPE_NONGROUP) {
-				pConfig.removeGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[4]));
-				try {
-					pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
-				} catch (Exception e) {
-					e.printStackTrace();
+			try {
+				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
+					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);
 				}
-			}else {
-				pConfig.removeUserPermission(channel.getGuild().getIdLong(), identifier.getIdentifier(), new Permission(command[4]));
-				try {
-					pConfig.saveUserPermissions(channel.getGuild().getIdLong(), identifier.getIdentifier());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			pConfig.removeGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[4]));
+			try {
+				pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			break;
 		default:
 			channel.sendMessage("Error: Invalid action\nValid actions are: add, remove").queue();
 			return;
 		}
+		channel.sendMessage("Successfully modified permission structure!").queue();
 	}
 	@SuppressWarnings("unused")
 	private static boolean isLong(String s) {

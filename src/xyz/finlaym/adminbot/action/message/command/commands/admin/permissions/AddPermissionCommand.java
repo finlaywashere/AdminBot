@@ -40,18 +40,19 @@ public class AddPermissionCommand extends Command{
 			}
 		}else if(message.getMentionedMembers().size() == 1){
 			Member m = message.getMentionedMembers().get(0);
+			GroupIdentifier id = new GroupIdentifier(Group.TYPE_USER, m.getIdLong());
 			try {
-				if(pConfig.getUserPerms(channel.getGuild().getIdLong(), m.getIdLong()) == null) {
-					pConfig.loadUserPermissions(channel.getGuild().getIdLong(),m.getIdLong());
+				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), id) == null) {
+					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),id);
 				}
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
 			for(int i = 2; i < command.length; i++) {
-				pConfig.addUserPermission(m.getGuild().getIdLong(), m.getIdLong(), new Permission(command[i]));
+				pConfig.addGroupPermission(m.getGuild().getIdLong(), id, new Permission(command[i]));
 			}
 			try {
-				pConfig.saveUserPermissions(m.getGuild().getIdLong(), m.getIdLong());
+				pConfig.saveGroupPermissions(m.getGuild().getIdLong(), id);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

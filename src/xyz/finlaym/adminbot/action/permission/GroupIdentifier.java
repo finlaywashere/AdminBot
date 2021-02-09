@@ -14,4 +14,15 @@ public class GroupIdentifier {
 	public long getIdentifier() {
 		return identifier;
 	}
+	@Override
+	public boolean equals(Object obj) {
+		if(!(obj instanceof GroupIdentifier))
+			return false;
+		GroupIdentifier id = (GroupIdentifier) obj;
+		return id.identifier == identifier && id.type == type;
+	}
+	@Override
+	public int hashCode() {
+		return (int) (identifier + type);
+	}
 }

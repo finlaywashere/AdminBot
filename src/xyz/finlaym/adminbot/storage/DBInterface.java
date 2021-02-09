@@ -129,63 +129,20 @@ public class DBInterface {
 				result += perms.get(i).toString();
 		}
 		Statement statement = conn.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `identifier`=\""+group.getIdentifier()+"\" AND `type`=\""+group.getType()+"\" AND `gid`=\""+gid+"\";");
+		ResultSet rs = statement.executeQuery("SELECT * FROM `group_perms` WHERE `identifier`=\""+group.getIdentifier()+"\" AND `type`=\""+group.getType()+"\" AND `gid`=\""+gid+"\";");
 		rs.last();
 		if(rs.getRow() == 0) {
-			PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_perms` (`gid`, `identifier`, `type`, `permissions`) VALUES(?,?,?,?);");
+			PreparedStatement pS = conn.prepareStatement("INSERT INTO `group_perms` (`gid`, `identifier`, `type`, `permissions`) VALUES(?,?,?,?);");
 			pS.setLong(2, group.getIdentifier());
 			pS.setInt(3, group.getType());
 			pS.setLong(1, gid);
 			pS.setString(4, result);
 			pS.executeUpdate();
 		}else {
-			PreparedStatement pS = conn.prepareStatement("UPDATE `user_perms` SET `permissions`=? WHERE `identifier`=? AND `type`=? AND `gid`=?;");
+			PreparedStatement pS = conn.prepareStatement("UPDATE `group_perms` SET `permissions`=? WHERE `identifier`=? AND `type`=? AND `gid`=?;");
 			pS.setLong(2, group.getIdentifier());
 			pS.setInt(3, group.getType());
 			pS.setLong(4, gid);
-			pS.setString(1, result);
-			pS.executeUpdate();
-		}
-	}
-
-	public void loadUserPermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
-		Statement statement = conn.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
-		rs.next();
-		List<Permission> perms = new ArrayList<Permission>();
-		try {
-			for(String s : rs.getString("permissions").split(":")) {
-				perms.add(new Permission(s));
-			}
-		}catch(Exception e) {
-			return;
-		}
-		pConfig.setUserPerms(rs.getLong("gid"), rs.getLong("id"), perms);
-	}
-	public void saveUserPermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
-		String result = "";
-		List<Permission> perms = pConfig.getUserPerms(gid,id);
-		if(perms == null)
-			return;
-		for(int i = 0; i < perms.size(); i++) {
-			if(i != 0)
-				result += ":"+perms.get(i).toString();
-			else
-				result += perms.get(i).toString();
-		}
-		Statement statement = conn.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
-		rs.last();
-		if(rs.getRow() == 0) {
-			PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_perms` (`gid`, `id`, `permissions`) VALUES(?,?, ?);");
-			pS.setLong(2, id);
-			pS.setLong(1, gid);
-			pS.setString(3, result);
-			pS.executeUpdate();
-		}else {
-			PreparedStatement pS = conn.prepareStatement("UPDATE `user_perms` SET `permissions`=? WHERE `id`=? AND `gid`=?;");
-			pS.setLong(2, id);
-			pS.setLong(3, gid);
 			pS.setString(1, result);
 			pS.executeUpdate();
 		}
