@@ -12,12 +12,13 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.action.message.command.commands.HelpCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.ReserveChannelCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.AddPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.AddSwearCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.ReloadCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.RemovePermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RemoveReservationCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RolesMenuCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.AddPermissionCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.ModifyPermissionsRawCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.RemovePermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.GuildInfoCommand;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.utils.LoggerHelper;
@@ -42,6 +43,7 @@ public class CommandHandler {
 		this.commands.add(new AddPermissionCommand());
 		this.commands.add(new RemovePermissionCommand());
 		this.commands.add(new RemoveReservationCommand());
+		this.commands.add(new ModifyPermissionsRawCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -55,7 +57,7 @@ public class CommandHandler {
 		PermissionsConfig pConfig = bot.getPermissionsConfig();
 		for(Command c : commands) {
 			if(command[0].equalsIgnoreCase(c.getName())) {
-				if(pConfig.checkPermission(channel.getGuild().getIdLong(), member, c.getPermission())) {
+				if(pConfig.checkPermission(channel.getGuild(), member, c.getPermission())) {
 					LoggerHelper.log(logger, channel.getGuild(), channel, member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");
 					c.execute(member, channel, command, this, message);
 					return;

@@ -59,7 +59,7 @@ public class MessageListener extends ListenerAdapter{
 		}
 		long gid = channel.getGuild().getIdLong();
 		PermissionsConfig pConfig = bot.getPermissionsConfig();
-		boolean swearOverride = pConfig.checkPermission(gid, member, "override.swear");
+		boolean swearOverride = pConfig.checkPermission(channel.getGuild(), member, "override.swear");
 		if(!swearOverride) {
 			// User's messages need to be checked for swearing
 			boolean swear = sHandler.swearCheck(message.getContentRaw(), gid);

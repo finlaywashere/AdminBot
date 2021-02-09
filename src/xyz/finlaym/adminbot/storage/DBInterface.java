@@ -11,8 +11,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import xyz.finlaym.adminbot.action.permission.Permission;
 import xyz.finlaym.adminbot.action.message.swear.SwearWord;
+import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
+import xyz.finlaym.adminbot.action.permission.Permission;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
@@ -101,8 +102,53 @@ public class DBInterface {
 			pS.executeUpdate();
 		}
 	}
+	
+	public void loadGroupPermissions(long gid, GroupIdentifier group, PermissionsConfig pConfig) throws Exception{
+		Statement statement = conn.createStatement();
+		ResultSet rs = statement.executeQuery("SELECT * FROM `group_perms` WHERE `identifier`=\""+group.getIdentifier()+"\" AND `type`=\""+group.getType()+"\" AND `gid`=\""+gid+"\";");
+		rs.next();
+		List<Permission> perms = new ArrayList<Permission>();
+		try {
+			for(String s : rs.getString("permissions").split(":")) {
+				perms.add(new Permission(s));
+			}
+		}catch(Exception e) {
+			return;
+		}
+		pConfig.setGroupPerms(rs.getLong("gid"), new GroupIdentifier(rs.getInt("type"), rs.getLong("identifier")), perms);
+	}
+	public void saveGroupPermissions(long gid, GroupIdentifier group, PermissionsConfig pConfig) throws Exception{
+		String result = "";
+		List<Permission> perms = pConfig.getGroupPerms(gid,group);
+		if(perms == null)
+			return;
+		for(int i = 0; i < perms.size(); i++) {
+			if(i != 0)
+				result += ":"+perms.get(i).toString();
+			else
+				result += perms.get(i).toString();
+		}
+		Statement statement = conn.createStatement();
+		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `identifier`=\""+group.getIdentifier()+"\" AND `type`=\""+group.getType()+"\" AND `gid`=\""+gid+"\";");
+		rs.last();
+		if(rs.getRow() == 0) {
+			PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_perms` (`gid`, `identifier`, `type`, `permissions`) VALUES(?,?,?,?);");
+			pS.setLong(2, group.getIdentifier());
+			pS.setInt(3, group.getType());
+			pS.setLong(1, gid);
+			pS.setString(4, result);
+			pS.executeUpdate();
+		}else {
+			PreparedStatement pS = conn.prepareStatement("UPDATE `user_perms` SET `permissions`=? WHERE `identifier`=? AND `type`=? AND `gid`=?;");
+			pS.setLong(2, group.getIdentifier());
+			pS.setInt(3, group.getType());
+			pS.setLong(4, gid);
+			pS.setString(1, result);
+			pS.executeUpdate();
+		}
+	}
 
-	public void loadPermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
+	public void loadUserPermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `user_perms` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
 		rs.next();
@@ -116,7 +162,7 @@ public class DBInterface {
 		}
 		pConfig.setUserPerms(rs.getLong("gid"), rs.getLong("id"), perms);
 	}
-	public void savePermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
+	public void saveUserPermissions(long gid, long id, PermissionsConfig pConfig) throws Exception{
 		String result = "";
 		List<Permission> perms = pConfig.getUserPerms(gid,id);
 		if(perms == null)
