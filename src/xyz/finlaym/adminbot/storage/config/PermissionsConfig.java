@@ -46,6 +46,8 @@ public class PermissionsConfig {
 		List<Permission> perms = p2.get(group);
 		if(perms == null)
 			perms = new ArrayList<Permission>();
+		if(perms.contains(perm))
+			return;
 		perms.add(perm);
 		p2.put(group, perms);
 		groupPerms.put(gid, p2);

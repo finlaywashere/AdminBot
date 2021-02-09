@@ -42,4 +42,11 @@ public class Permission {
 	public String toString() {
 		return permission;
 	}
+	@Override
+	public boolean equals(Object obj) {
+		if(!(obj instanceof Permission))
+			return false;
+		Permission p = (Permission) obj;
+		return p.permission.equals(permission);
+	}
 }
