@@ -22,7 +22,7 @@ public class ResponseHandler {
 				return;
 		}
 		for(CustomResponse r : responses) {
-			if(message.getContentRaw().matches(r.getTrigger())) {
+			if(message.getContentRaw().toLowerCase().matches(r.getTrigger())) {
 				channel.sendMessage(replace(r.getResponse(),author,channel,message)).queue();
 				return;
 			}
