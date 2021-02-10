@@ -37,5 +37,6 @@ public class AddResponseCommand extends Command {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		channel.sendMessage("Successfully added custom response to database!").queue();
 	}
 }
