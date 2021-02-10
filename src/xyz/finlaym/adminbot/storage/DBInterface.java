@@ -11,6 +11,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 import xyz.finlaym.adminbot.action.message.swear.SwearWord;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
@@ -36,24 +37,33 @@ public class DBInterface {
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `server_config` WHERE `id`=\""+id+"\";");
 		rs.next();
-		if(rs.isAfterLast())
+		if(rs.wasNull())
 			return;
 		sConfig.setLevelsEnabled(rs.getLong("id"),rs.getBoolean("levelsEnabled"));
+		sConfig.setResponses(rs.getLong("id"), CustomResponse.fromString(rs.getString("customResponses")));
 		rs.close();
 	}
 	public void saveServerConfig(long id, ServerConfig sConfig) throws Exception{
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("SELECT * FROM `server_config` WHERE `id`=\""+id+"\";");
 		rs.last();
+		String responses = "";
+		for(CustomResponse r : sConfig.getResponses(id)) {
+			responses += ":"+r.toString();
+		}
+		if(responses.length() > 0)
+			responses = responses.substring(1);
 		if(rs.getRow() == 0) {
-			PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `levelsEnabled`) VALUES(?,?);");
+			PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `levelsEnabled`, `customResponses`) VALUES(?,?,?);");
 			pS.setLong(1, id);
 			pS.setBoolean(2, sConfig.getLevelsEnabled(id));
+			pS.setString(3, responses);
 			pS.executeUpdate();
 		}else {
-			PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `levelsEnabled` = ? WHERE `id` = ?");
-			pS.setLong(2, id);
+			PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `levelsEnabled` = ?, `customResponses` = ? WHERE `id` = ?");
+			pS.setLong(3, id);
 			pS.setBoolean(1, sConfig.getLevelsEnabled(id));
+			pS.setString(2, responses);
 			pS.executeUpdate();
 		}
 	}
