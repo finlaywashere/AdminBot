@@ -1,6 +1,7 @@
 package xyz.finlaym.adminbot.action.message.response;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -21,8 +22,9 @@ public class ResponseHandler {
 			if(responses == null)
 				return;
 		}
+		String check = message.getContentRaw();
 		for(CustomResponse r : responses) {
-			if(message.getContentRaw().toLowerCase().matches(r.getTrigger())) {
+			if(Pattern.compile(r.getTrigger(),Pattern.CASE_INSENSITIVE).matcher(check).find()) {
 				channel.sendMessage(replace(r.getResponse(),author,channel,message)).queue();
 				return;
 			}
