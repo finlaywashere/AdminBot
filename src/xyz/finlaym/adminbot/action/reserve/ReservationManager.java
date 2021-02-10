@@ -15,10 +15,10 @@ import net.dv8tion.jda.api.managers.ChannelManager;
 
 public class ReservationManager extends ListenerAdapter{
 	
-	private Map<Long,ChannelState> states;
+	private Map<Long,Map<Long,ChannelState>> states;
 	
 	public ReservationManager() {
-		this.states = new HashMap<Long,ChannelState>();
+		this.states = new HashMap<Long,Map<Long,ChannelState>>();
 	}
 	
 	@Override
@@ -30,31 +30,37 @@ public class ReservationManager extends ListenerAdapter{
 		}
 	}
 	public void removeReservation(VoiceChannel vc) {
+		if(!states.containsKey(vc.getGuild().getIdLong()))
+			return;
+		Map<Long,ChannelState> gStates = states.get(vc.getGuild().getIdLong());
 		long id = vc.getIdLong();
-		if(states.containsKey(id)) {
-			ChannelManager manager = vc.getManager();
+		if(!gStates.containsKey(id)) 
+			return;
+		ChannelManager manager = vc.getManager();
 			
-			for(PermissionOverride p : vc.getPermissionOverrides()) {
-				manager.removePermissionOverride(p.getPermissionHolder());
-			}
-			
-			for(PermissionState state : states.get(id).getPrevState()){
-				manager.putPermissionOverride(state.getHolder(), state.getAllowed(), state.getDenied());
-			}
-			
-			manager.queue();
-			states.remove(id);
+		for(PermissionOverride p : vc.getPermissionOverrides()) {
+			manager.removePermissionOverride(p.getPermissionHolder());
 		}
+		
+		for(PermissionState state : gStates.get(id).getPrevState()){
+			manager.putPermissionOverride(state.getHolder(), state.getAllowed(), state.getDenied());
+		}
+		manager.queue();
+		gStates.remove(id);
+		states.put(id, gStates);
 	}
 	public void addReservation(VoiceChannel vc, List<User> users) {
-		if(getStates().containsKey(vc.getIdLong()))
+		Map<Long,ChannelState> gStates = states.get(vc.getGuild().getIdLong());
+		if(gStates != null && gStates.containsKey(vc.getIdLong()))
 			return;
+		if(gStates == null)
+			gStates = new HashMap<Long,ChannelState>();
 		List<PermissionOverride> overrides = vc.getPermissionOverrides();
-		List<PermissionState> states = new ArrayList<PermissionState>();
+		List<PermissionState> statesL = new ArrayList<PermissionState>();
 		for(PermissionOverride o : overrides) {
-			states.add(new PermissionState(o.getAllowed(), o.getDenied(), o.getPermissionHolder()));
+			statesL.add(new PermissionState(o.getAllowed(), o.getDenied(), o.getPermissionHolder()));
 		}
-		getStates().put(vc.getIdLong(), new ChannelState(states));
+		gStates.put(vc.getIdLong(), new ChannelState(statesL));
 		ChannelManager manager = vc.getManager();
 		for(PermissionOverride p : vc.getPermissionOverrides()) {
 			manager.removePermissionOverride(p.getPermissionHolder());
@@ -71,8 +77,9 @@ public class ReservationManager extends ListenerAdapter{
 			manager.putPermissionOverride(vc.getGuild().getMember(u), perms, new ArrayList<Permission>());
 		}
 		manager.queue();
+		states.put(vc.getGuild().getIdLong(),gStates);
 	}
-	public Map<Long, ChannelState> getStates() {
+	public Map<Long,Map<Long, ChannelState>> getStates() {
 		return states;
 	}
 }
