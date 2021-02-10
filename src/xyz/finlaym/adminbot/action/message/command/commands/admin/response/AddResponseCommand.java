@@ -22,7 +22,7 @@ public class AddResponseCommand extends Command {
 			channel.sendMessage(usage).queue();
 			return;
 		}
-		String trigger = command[1];
+		String trigger = command[1].replaceAll("_", " ");
 		String response = "";
 		for(int i = 2; i < command.length; i++) {
 			response += command[i] + " ";
