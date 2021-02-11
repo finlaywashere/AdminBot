@@ -28,7 +28,7 @@ public class ListPermissionsCommand extends Command{
 		if(command.length == 1) {
 			try {
 				if(pConfig.checkPermission(channel.getGuild(), member, "permission.view.self")) {
-					List<Permission> perms = pConfig.getEffectivePermissions(channel.getGuild(), member.getIdLong());
+					List<Permission> perms = pConfig.getEffectivePermissions(channel.getGuild(), member);
 					
 					String s = "User is admin: "+pConfig.hasAdmin(member)+"\nPermissions:\n```";
 					if(perms != null) {
@@ -76,7 +76,7 @@ public class ListPermissionsCommand extends Command{
 				long id = message.getMentionedMembers().get(0).getIdLong();
 				try {
 					if(pConfig.checkPermission(channel.getGuild(), member, "permission.view.others.user."+id)) {
-						List<Permission> perms = pConfig.getEffectivePermissions(channel.getGuild(), id);
+						List<Permission> perms = pConfig.getEffectivePermissions(channel.getGuild(), message.getMentionedMembers().get(0));
 						String s = "User is admin: "+pConfig.hasAdmin(message.getMentionedMembers().get(0))+"\nPermissions:\n```";
 						if(perms != null) {
 							for(Permission p : perms) {

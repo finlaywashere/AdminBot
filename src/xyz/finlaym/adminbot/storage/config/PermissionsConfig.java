@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.entities.Role;
 import xyz.finlaym.adminbot.action.permission.Group;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
-import xyz.finlaym.adminbot.action.permission.RoleGroup;
 import xyz.finlaym.adminbot.storage.DBInterface;
 
 public class PermissionsConfig {
@@ -81,10 +80,22 @@ public class PermissionsConfig {
 	public boolean hasAdmin(Role r) {
 		return r.hasPermission(net.dv8tion.jda.api.Permission.ADMINISTRATOR);
 	}
-	public List<Permission> getEffectivePermissions(Guild guild, long user) throws Exception{
-		List<Permission> perms = getGroupPerms(guild.getIdLong(),new GroupIdentifier(Group.TYPE_USER, user));
+	public List<Permission> getEffectivePermissions(Guild guild, Member user) throws Exception{
+		List<Permission> perms = getGroupPerms(guild.getIdLong(),new GroupIdentifier(Group.TYPE_USER, user.getIdLong()));
 		Map<GroupIdentifier, List<Permission>> permsMap = groupPerms.get(guild.getIdLong());
-		if(permsMap != null) {
+		for(Role r : user.getRoles()) {
+			GroupIdentifier identifier = new GroupIdentifier(Group.TYPE_ROLE,r.getIdLong());
+			if(!permsMap.containsKey(identifier)) {
+				loadGroupPermissions(guild.getIdLong(), identifier);
+				permsMap = groupPerms.get(guild.getIdLong());
+				if(!permsMap.containsKey(identifier))
+					continue;
+			}
+			perms.addAll(permsMap.get(identifier));
+		}
+		
+		// This code is commented until support for role independent groups is added
+		/*if(permsMap != null) {
 			for(GroupIdentifier identifier : permsMap.keySet()) {
 				Group g = null;
 				switch(identifier.getType()) {
@@ -95,7 +106,7 @@ public class PermissionsConfig {
 					continue;
 				List<Member> members = g.getMembers();
 				for(Member m : members) {
-					if(m.getIdLong() == user) {
+					if(m.getIdLong() == user.getIdLong()) {
 						if(perms == null)
 							perms = new ArrayList<Permission>();
 						perms.addAll(permsMap.get(identifier));
@@ -103,20 +114,19 @@ public class PermissionsConfig {
 					}
 				}
 			}
-		}
+		}*/
 		return perms;
 	}
 	
 	public Map<Long, Map<GroupIdentifier, List<Permission>>> getGroupPerms() {
 		return groupPerms;
 	}
-	public boolean checkPermission(Guild guild, Member m, String permission) throws Exception {
-		return checkPermission(guild, m.getIdLong(), permission, hasAdmin(m));
-	}
-	public boolean checkPermission(Guild guild, long user, String permission, boolean admin) throws Exception {
+	public boolean checkPermission(Guild guild, Member user, String permission, boolean admin) throws Exception {
 		return checkPermission(guild, user, permission) | admin;
 	}
-	public boolean checkPermission(Guild guild, long user, String permission) throws Exception {
+	public boolean checkPermission(Guild guild, Member user, String permission) throws Exception {
+		if(hasAdmin(user))
+			return true;
 		List<Permission> perms = getEffectivePermissions(guild, user);
 		if(perms == null || perms.size() == 0)
 			return false;
