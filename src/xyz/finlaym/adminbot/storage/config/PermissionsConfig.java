@@ -71,19 +71,17 @@ public class PermissionsConfig {
 		dbInterface.saveGroupPermissions(gid, g,this);
 	}
 	public boolean hasAdmin(Member m) {
-		for(Role r : m.getRoles()) {
+		List<Role> roles = m.getRoles();
+		for(Role r : roles) {
 			if(r.hasPermission(net.dv8tion.jda.api.Permission.ADMINISTRATOR) || m.isOwner())
 				return true;
 		}
 		return false;
 	}
-	public boolean checkPermission(Guild guild, Member m, String permission) throws Exception {
-		return checkPermission(guild, m.getIdLong(), permission, hasAdmin(m));
+	public boolean hasAdmin(Role r) {
+		return r.hasPermission(net.dv8tion.jda.api.Permission.ADMINISTRATOR);
 	}
-	public boolean checkPermission(Guild guild, long user, String permission, boolean admin) throws Exception {
-		return checkPermission(guild, user, permission) | admin;
-	}
-	public boolean checkPermission(Guild guild, long user, String permission) throws Exception {
+	public List<Permission> getEffectivePermissions(Guild guild, long user) throws Exception{
 		List<Permission> perms = getGroupPerms(guild.getIdLong(),new GroupIdentifier(Group.TYPE_USER, user));
 		Map<GroupIdentifier, List<Permission>> permsMap = groupPerms.get(guild.getIdLong());
 		if(permsMap != null) {
@@ -106,6 +104,16 @@ public class PermissionsConfig {
 				}
 			}
 		}
+		return perms;
+	}
+	public boolean checkPermission(Guild guild, Member m, String permission) throws Exception {
+		return checkPermission(guild, m.getIdLong(), permission, hasAdmin(m));
+	}
+	public boolean checkPermission(Guild guild, long user, String permission, boolean admin) throws Exception {
+		return checkPermission(guild, user, permission) | admin;
+	}
+	public boolean checkPermission(Guild guild, long user, String permission) throws Exception {
+		List<Permission> perms = getEffectivePermissions(guild, user);
 		if(perms == null || perms.size() == 0)
 			return false;
 		for(Permission p : perms) {

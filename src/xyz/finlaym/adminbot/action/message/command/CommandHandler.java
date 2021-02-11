@@ -17,7 +17,9 @@ import xyz.finlaym.adminbot.action.message.command.commands.admin.ReloadCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RemoveReservationCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RolesMenuCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.AddPermissionCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.ListPermissionsCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.ModifyPermissionsRawCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.SearchPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.RemovePermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.response.AddResponseCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.GuildInfoCommand;
@@ -46,6 +48,8 @@ public class CommandHandler {
 		this.commands.add(new RemoveReservationCommand());
 		this.commands.add(new ModifyPermissionsRawCommand());
 		this.commands.add(new AddResponseCommand());
+		this.commands.add(new ListPermissionsCommand());
+		this.commands.add(new SearchPermissionCommand());
 	}
 	public Bot getBot() {
 		return bot;

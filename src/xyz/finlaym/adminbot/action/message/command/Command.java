@@ -3,15 +3,21 @@ package xyz.finlaym.adminbot.action.message.command;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import xyz.finlaym.adminbot.action.permission.PermissionDeclaration;
 
 public abstract class Command {
 	protected String name, permission, usage, description;
+	private PermissionDeclaration[] effectedPermissions = new PermissionDeclaration[0];
 
 	public Command(String name, String permission, String usage, String description) {
 		this.name = name;
 		this.permission = permission;
 		this.usage = usage;
 		this.description = description;
+	}
+	public Command(String name, String permission, String usage, String description, PermissionDeclaration... effectedPermissions) {
+		this(name,permission,usage,description);
+		this.effectedPermissions = effectedPermissions;
 	}
 	public String getName() {
 		return name;
@@ -24,6 +30,9 @@ public abstract class Command {
 	}
 	public String getDescription() {
 		return description;
+	}
+	public PermissionDeclaration[] getEffectedPermissions() {
+		return effectedPermissions;
 	}
 	public abstract void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message);
 }
