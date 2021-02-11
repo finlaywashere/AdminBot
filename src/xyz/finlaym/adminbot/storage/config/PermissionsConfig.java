@@ -85,10 +85,10 @@ public class PermissionsConfig {
 		Map<GroupIdentifier, List<Permission>> permsMap = groupPerms.get(guild.getIdLong());
 		for(Role r : user.getRoles()) {
 			GroupIdentifier identifier = new GroupIdentifier(Group.TYPE_ROLE,r.getIdLong());
-			if(!permsMap.containsKey(identifier)) {
+			if(permsMap == null || !permsMap.containsKey(identifier)) {
 				loadGroupPermissions(guild.getIdLong(), identifier);
 				permsMap = groupPerms.get(guild.getIdLong());
-				if(!permsMap.containsKey(identifier))
+				if(permsMap == null || !permsMap.containsKey(identifier))
 					continue;
 			}
 			perms.addAll(permsMap.get(identifier));
