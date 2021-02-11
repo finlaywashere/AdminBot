@@ -23,7 +23,7 @@ public class PermissionsConfig {
 	}
 	public List<Permission> getGroupPerms(long gid, GroupIdentifier group) throws Exception{
 		Map<GroupIdentifier,List<Permission>> p2 = groupPerms.get(gid);
-		if(p2 == null) {
+		if(p2 == null || !p2.containsKey(group)) {
 			loadGroupPermissions(gid, group);
 			p2 = groupPerms.get(gid);
 			if(p2 == null)
