@@ -82,6 +82,8 @@ public class PermissionsConfig {
 	}
 	public List<Permission> getEffectivePermissions(Guild guild, Member user) throws Exception{
 		List<Permission> perms = getGroupPerms(guild.getIdLong(),new GroupIdentifier(Group.TYPE_USER, user.getIdLong()));
+		if(perms == null)
+			perms = new ArrayList<Permission>();
 		Map<GroupIdentifier, List<Permission>> permsMap = groupPerms.get(guild.getIdLong());
 		for(Role r : user.getRoles()) {
 			GroupIdentifier identifier = new GroupIdentifier(Group.TYPE_ROLE,r.getIdLong());
