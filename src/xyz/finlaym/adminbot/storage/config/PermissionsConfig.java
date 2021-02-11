@@ -91,7 +91,10 @@ public class PermissionsConfig {
 				if(permsMap == null || !permsMap.containsKey(identifier))
 					continue;
 			}
-			perms.addAll(permsMap.get(identifier));
+			List<Permission> gPerms = permsMap.get(identifier);
+			if(gPerms == null)
+				continue;
+			perms.addAll(gPerms);
 		}
 		
 		// This code is commented until support for role independent groups is added
