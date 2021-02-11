@@ -81,9 +81,10 @@ public class PermissionsConfig {
 		return r.hasPermission(net.dv8tion.jda.api.Permission.ADMINISTRATOR);
 	}
 	public List<Permission> getEffectivePermissions(Guild guild, Member user) throws Exception{
-		List<Permission> perms = getGroupPerms(guild.getIdLong(),new GroupIdentifier(Group.TYPE_USER, user.getIdLong()));
-		if(perms == null)
-			perms = new ArrayList<Permission>();
+		List<Permission> perms = new ArrayList<Permission>();
+		List<Permission> u = getGroupPerms(guild.getIdLong(),new GroupIdentifier(Group.TYPE_USER, user.getIdLong()));
+		if(u != null)
+			perms.addAll(u);
 		Map<GroupIdentifier, List<Permission>> permsMap = groupPerms.get(guild.getIdLong());
 		for(Role r : user.getRoles()) {
 			GroupIdentifier identifier = new GroupIdentifier(Group.TYPE_ROLE,r.getIdLong());
