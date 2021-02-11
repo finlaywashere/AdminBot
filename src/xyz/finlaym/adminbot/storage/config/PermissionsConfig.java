@@ -106,6 +106,10 @@ public class PermissionsConfig {
 		}
 		return perms;
 	}
+	
+	public Map<Long, Map<GroupIdentifier, List<Permission>>> getGroupPerms() {
+		return groupPerms;
+	}
 	public boolean checkPermission(Guild guild, Member m, String permission) throws Exception {
 		return checkPermission(guild, m.getIdLong(), permission, hasAdmin(m));
 	}

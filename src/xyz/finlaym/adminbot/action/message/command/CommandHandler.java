@@ -22,7 +22,7 @@ import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.Mo
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.SearchPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.RemovePermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.response.AddResponseCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.debug.GuildInfoCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.utils.LoggerHelper;
 
@@ -38,7 +38,7 @@ public class CommandHandler {
 		this.commands = new ArrayList<Command>();
 		
 		this.commands.add(new HelpCommand());
-		this.commands.add(new GuildInfoCommand());
+		this.commands.add(new DebugInfoCommand());
 		this.commands.add(new AddSwearCommand());
 		this.commands.add(new ReloadCommand());
 		this.commands.add(new RolesMenuCommand());
