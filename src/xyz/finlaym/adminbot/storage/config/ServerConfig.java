@@ -8,7 +8,17 @@ import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 import xyz.finlaym.adminbot.storage.DBInterface;
 
 public class ServerConfig {
+	/**
+	 * Config for levels (users level up by sending messages)
+	 * Key: Guild id as long
+	 * Value: True if guild has levels enabled, false otherwise
+	 */
 	private Map<Long,Boolean> levelsEnabled;
+	/**
+	 * Config for custom responses (look for pattern and send response)
+	 * Key: Guild id as long
+	 * Value: A list of all the custom responses on the guild
+	 */
 	private Map<Long,List<CustomResponse>> responses;
 	private DBInterface dbInterface;
 	

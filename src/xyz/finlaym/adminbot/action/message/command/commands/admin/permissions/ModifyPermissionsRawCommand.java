@@ -9,6 +9,7 @@ import xyz.finlaym.adminbot.action.permission.Group;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
+import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class ModifyPermissionsRawCommand extends Command {
 
@@ -22,7 +23,7 @@ public class ModifyPermissionsRawCommand extends Command {
 			channel.sendMessage("Incorrect usage of command!\nUsage: -modifypermission <action> <id type> <id> permission").queue();
 			return;
 		}
-		if(!isLong(command[3])) {
+		if(!MathUtils.isLong(command[3])) {
 			channel.sendMessage("Error: id must be a group/user id!").queue();
 			return;
 		}
@@ -75,14 +76,5 @@ public class ModifyPermissionsRawCommand extends Command {
 			return;
 		}
 		channel.sendMessage("Successfully modified permission structure!").queue();
-	}
-	@SuppressWarnings("unused")
-	private static boolean isLong(String s) {
-		try {
-			long l = Long.valueOf(s);
-			return true;
-		}catch(NumberFormatException e) {
-			return false;
-		}
 	}
 }

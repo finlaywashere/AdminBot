@@ -6,6 +6,11 @@ import java.util.Map;
 import xyz.finlaym.adminbot.storage.DBInterface;
 
 public class UserLevelConfig {
+	/**
+	 * The current level (rank kind of) of users in every guild
+	 * Key: Guild id as long
+	 * Value: A map of user id to level integer
+	 */
 	private Map<Long,Map<Long,Integer>> levels;
 	private DBInterface dbInterface;
 	

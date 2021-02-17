@@ -15,6 +15,11 @@ import xyz.finlaym.adminbot.storage.DBInterface;
 
 public class PermissionsConfig {
 	private DBInterface dbInterface;
+	/**
+	 * A map of permissions for all groups the bot manages
+	 * Key: Guild id as long
+	 * Value: Map of group identifiers to group permissions
+	 */
 	private Map<Long,Map<GroupIdentifier,List<Permission>>> groupPerms;
 
 	public PermissionsConfig(DBInterface dbInterface) {

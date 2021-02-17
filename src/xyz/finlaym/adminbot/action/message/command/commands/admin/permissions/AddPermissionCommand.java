@@ -62,13 +62,4 @@ public class AddPermissionCommand extends Command{
 		}
 		channel.sendMessage("Successfully added permission(s) to users/roles!").queue();
 	}
-	@SuppressWarnings("unused")
-	private static boolean isLong(String s) {
-		try {
-			long l = Long.valueOf(s);
-			return true;
-		}catch(NumberFormatException e) {
-			return false;
-		}
-	}
 }

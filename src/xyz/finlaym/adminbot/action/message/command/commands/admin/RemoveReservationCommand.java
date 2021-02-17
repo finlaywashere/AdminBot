@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class RemoveReservationCommand extends Command{
 
@@ -18,6 +19,10 @@ public class RemoveReservationCommand extends Command{
 	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
 		VoiceChannel vc;
 		if(command.length > 1) {
+			if(!MathUtils.isLong(command[1])) {
+				channel.sendMessage("Channel id must be a number!").queue();
+				return;
+			}
 			vc = channel.getGuild().getVoiceChannelById(Long.valueOf(command[1]));
 		}else {
 			GuildVoiceState voiceState = member.getVoiceState();

@@ -17,6 +17,11 @@ public class SwearsConfig {
 	private static final Logger logger = LoggerFactory.getLogger(SwearsConfig.class);
 	private DBInterface dbInterface;
 
+	/**
+	 * A map to store all of the swear words active in every guild
+	 * Key: Guild id as long
+	 * Value: A list of swear words active for the guild
+	 */
 	private Map<Long,List<SwearWord>> swearWords = new HashMap<Long,List<SwearWord>>();
 	
 	public SwearsConfig(DBInterface dbInterface) {

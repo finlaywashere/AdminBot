@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.Bot;
+import xyz.finlaym.adminbot.action.message.command.commands.EchoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.HelpCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.ReserveChannelCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.AddSwearCommand;
@@ -19,10 +20,14 @@ import xyz.finlaym.adminbot.action.message.command.commands.admin.RolesMenuComma
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.AddPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.ListPermissionsCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.ModifyPermissionsRawCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.SearchPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.RemovePermissionCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.response.AddResponseCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.SearchPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.response.AddResponseCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.session.DeleteSessionCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.session.SetSessionVariableCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.session.StartSessionCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.session.ViewHistoryCommand;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.utils.LoggerHelper;
 
@@ -32,9 +37,11 @@ public class CommandHandler {
 	
 	private Bot bot;
 	private List<Command> commands;
+	private SessionHandler sessionHandler;
 
 	public CommandHandler(Bot bot) {
 		this.bot = bot;
+		this.sessionHandler = new SessionHandler(this);
 		this.commands = new ArrayList<Command>();
 		
 		this.commands.add(new HelpCommand());
@@ -50,6 +57,11 @@ public class CommandHandler {
 		this.commands.add(new AddResponseCommand());
 		this.commands.add(new ListPermissionsCommand());
 		this.commands.add(new SearchPermissionCommand());
+		this.commands.add(new StartSessionCommand());
+		this.commands.add(new DeleteSessionCommand());
+		this.commands.add(new ViewHistoryCommand());
+		this.commands.add(new SetSessionVariableCommand());
+		this.commands.add(new EchoCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -60,6 +72,8 @@ public class CommandHandler {
 	public void handleCommand(Member member, TextChannel channel, String[] command, Message message) throws Exception {
 		if(command.length == 0)
 			return;
+		// Handle command before permission checks to ensure theres no way to bypass them
+		sessionHandler.handleCommand(member, channel, message, command);
 		PermissionsConfig pConfig = bot.getPermissionsConfig();
 		for(Command c : commands) {
 			if(command[0].equalsIgnoreCase(c.getName())) {

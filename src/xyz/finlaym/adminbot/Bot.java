@@ -21,6 +21,7 @@ import xyz.finlaym.adminbot.action.reserve.ReservationManager;
 import xyz.finlaym.adminbot.storage.DBInterface;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
+import xyz.finlaym.adminbot.storage.config.SessionConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
 import xyz.finlaym.adminbot.storage.config.UserLevelConfig;
 
@@ -47,6 +48,7 @@ public class Bot extends ListenerAdapter {
 	private ServerConfig seConfig;
 	private PermissionsConfig pConfig;
 	private ReservationManager rManager;
+	private SessionConfig sessionConfig;
 	
 	public static void main(String[] args) throws Exception {
 		INSTANCE = new Bot();
@@ -68,6 +70,7 @@ public class Bot extends ListenerAdapter {
 		uConfig = new UserLevelConfig(dbInterface);
 		seConfig = new ServerConfig(dbInterface);
 		pConfig = new PermissionsConfig(dbInterface);
+		sessionConfig = new SessionConfig();
 		logger.info("Finished startup!");
 	}
 
@@ -85,5 +88,8 @@ public class Bot extends ListenerAdapter {
 	}
 	public ReservationManager getReservationManager() {
 		return rManager;
+	}
+	public SessionConfig getSessionConfig() {
+		return sessionConfig;
 	}
 }

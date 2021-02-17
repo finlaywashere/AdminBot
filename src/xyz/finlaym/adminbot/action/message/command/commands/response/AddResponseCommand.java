@@ -1,4 +1,4 @@
-package xyz.finlaym.adminbot.action.message.command.commands.admin.response;
+package xyz.finlaym.adminbot.action.message.command.commands.response;
 
 import java.util.ArrayList;
 import java.util.List;

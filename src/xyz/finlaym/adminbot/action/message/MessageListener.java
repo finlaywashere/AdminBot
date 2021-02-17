@@ -38,7 +38,7 @@ public class MessageListener extends ListenerAdapter{
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
 		try {
-			handleMessage(event.getAuthor(), event.getTextChannel(), event.getMember(), event.getMessage());
+			handleMessage(event.getTextChannel(), event.getMember(), event.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -46,12 +46,13 @@ public class MessageListener extends ListenerAdapter{
 	@Override
 	public void onMessageUpdate(MessageUpdateEvent event) {
 		try {
-			handleMessage(event.getAuthor(), event.getTextChannel(), event.getMember(), event.getMessage());
+			handleMessage(event.getTextChannel(), event.getMember(), event.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	private void handleMessage(User author, TextChannel channel, Member member, Message message) throws Exception {
+	private void handleMessage(TextChannel channel, Member member, Message message) throws Exception {
+		User author = member.getUser();
 		if (author.isBot())
 			return;
 		try {
