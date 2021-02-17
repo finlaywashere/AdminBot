@@ -18,7 +18,6 @@ public class EchoCommand extends Command{
 		for(int i = 1; i < command.length; i++) {
 			text += command[i] + " ";
 		}
-		text = text.strip();
 		channel.sendMessage(text).queue();
 	}
 }
