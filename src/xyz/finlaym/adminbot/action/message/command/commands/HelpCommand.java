@@ -15,12 +15,14 @@ public class HelpCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		List<Command> commands = handler.getCommands();
 		String help = "Command usage: ";
 		for(Command c : commands) {
 			help += "\n-"+c.getName()+" : "+c.getDescription()+" : "+c.getUsage();
 		}
 		channel.sendMessage(help).queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

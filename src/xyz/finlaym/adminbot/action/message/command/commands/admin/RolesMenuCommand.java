@@ -18,7 +18,7 @@ public class RolesMenuCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		MessageBuilder mBuilder = new MessageBuilder("React to be assigned a role!");
 		Message m1 = mBuilder.build();
 		channel.sendMessage(m1).queue(m2 -> {
@@ -29,7 +29,8 @@ public class RolesMenuCommand extends Command{
 			}
 		});
 		message.delete().queue();
-		return;
+		if(silence)
+			message.delete().queue();
 	}
 
 }

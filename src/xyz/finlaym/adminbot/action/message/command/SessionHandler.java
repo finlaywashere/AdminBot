@@ -12,7 +12,7 @@ public class SessionHandler {
 	public SessionHandler(CommandHandler cHandler) {
 		this.cHandler = cHandler;
 	}
-	public void handleCommand(Member member, TextChannel channel, Message message, String[] command) {
+	public void handleCommand(Member member, TextChannel channel, Message message, String[] command, boolean silenced) {
 		SessionConfig config = cHandler.getBot().getSessionConfig();
 		long gid = channel.getGuild().getIdLong();
 		long uid = member.getIdLong();

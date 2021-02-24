@@ -16,7 +16,7 @@ public class RemoveReservationCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		VoiceChannel vc;
 		if(command.length > 1) {
 			if(!MathUtils.isLong(command[1])) {
@@ -33,6 +33,9 @@ public class RemoveReservationCommand extends Command{
 			vc = member.getVoiceState().getChannel();
 		}
 		handler.getBot().getReservationManager().removeReservation(vc);
-		channel.sendMessage("Successfully removed a reservation on channel \""+vc.getName()+"\"!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully removed a reservation on channel \""+vc.getName()+"\"!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

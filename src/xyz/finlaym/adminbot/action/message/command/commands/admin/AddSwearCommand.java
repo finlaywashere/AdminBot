@@ -16,7 +16,7 @@ public class AddSwearCommand extends Command {
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		Guild guild = channel.getGuild();
 		SwearsConfig sConfig = handler.getBot().getSwearsConfig();
 		for(int i = 1; i < command.length; i++) {
@@ -29,6 +29,9 @@ public class AddSwearCommand extends Command {
 				System.err.println("Failed to add swear word to file!");
 			}
 		}
-		channel.sendMessage("Successfully added swears to DB!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully added swears to DB!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

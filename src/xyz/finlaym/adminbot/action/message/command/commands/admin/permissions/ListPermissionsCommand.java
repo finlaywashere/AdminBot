@@ -23,7 +23,7 @@ public class ListPermissionsCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
 		if(command.length == 1) {
 			try {
@@ -99,7 +99,8 @@ public class ListPermissionsCommand extends Command{
 				channel.sendMessage("Usage: "+usage);
 				return;
 			}
-			
+			if(silence)
+				message.delete().queue();
 		}
 	}
 }

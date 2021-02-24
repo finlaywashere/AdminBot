@@ -24,6 +24,8 @@ import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.Re
 import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.SearchPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.response.AddResponseCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.response.DeleteResponseCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.response.ListResponsesCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.DeleteSessionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.SetSessionVariableCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.StartSessionCommand;
@@ -62,6 +64,8 @@ public class CommandHandler {
 		this.commands.add(new ViewHistoryCommand());
 		this.commands.add(new SetSessionVariableCommand());
 		this.commands.add(new EchoCommand());
+		this.commands.add(new ListResponsesCommand());
+		this.commands.add(new DeleteResponseCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -72,14 +76,19 @@ public class CommandHandler {
 	public void handleCommand(Member member, TextChannel channel, String[] command, Message message) throws Exception {
 		if(command.length == 0)
 			return;
+		boolean silenced = false;
+		if(command[0].startsWith("!")) {
+			command[0] = command[0].substring(1);
+			silenced = true;
+		}
 		// Handle command before permission checks to ensure theres no way to bypass them
-		sessionHandler.handleCommand(member, channel, message, command);
+		sessionHandler.handleCommand(member, channel, message, command, silenced);
 		PermissionsConfig pConfig = bot.getPermissionsConfig();
 		for(Command c : commands) {
 			if(command[0].equalsIgnoreCase(c.getName())) {
 				if(pConfig.checkPermission(channel.getGuild(), member, c.getPermission())) {
 					LoggerHelper.log(logger, channel.getGuild(), channel, member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");
-					c.execute(member, channel, command, this, message);
+					c.execute(member, channel, command, this, message, silenced);
 					return;
 				}else {
 					LoggerHelper.log(logger, channel.getGuild(), channel, member.getUser(), "tried to execute command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");

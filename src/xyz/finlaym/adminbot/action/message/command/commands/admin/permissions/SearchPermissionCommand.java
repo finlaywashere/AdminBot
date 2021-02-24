@@ -14,7 +14,7 @@ public class SearchPermissionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		String search = "";
 		for(int i = 1; i < command.length; i++) {
 			search += command[i]+" ";
@@ -37,5 +37,7 @@ public class SearchPermissionCommand extends Command{
 			}
 		}
 		channel.sendMessage(s).queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

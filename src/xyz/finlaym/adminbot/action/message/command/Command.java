@@ -34,5 +34,5 @@ public abstract class Command {
 	public PermissionDeclaration[] getEffectedPermissions() {
 		return effectedPermissions;
 	}
-	public abstract void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message);
+	public abstract void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence);
 }

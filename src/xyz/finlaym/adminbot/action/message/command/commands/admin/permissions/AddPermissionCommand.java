@@ -18,7 +18,7 @@ public class AddPermissionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
 		if(message.getMentionedRoles().size() == 1) {
 			Role r = message.getMentionedRoles().get(0);
@@ -60,6 +60,9 @@ public class AddPermissionCommand extends Command{
 			channel.sendMessage("You must mention one role/user to give permissions to!").queue();
 			return;
 		}
-		channel.sendMessage("Successfully added permission(s) to users/roles!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully added permission(s) to users/roles!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

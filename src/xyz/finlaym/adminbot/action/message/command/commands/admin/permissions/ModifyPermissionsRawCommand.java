@@ -18,7 +18,7 @@ public class ModifyPermissionsRawCommand extends Command {
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		if(command.length != 5) {
 			channel.sendMessage("Incorrect usage of command!\nUsage: -modifypermission <action> <id type> <id> permission").queue();
 			return;
@@ -75,6 +75,9 @@ public class ModifyPermissionsRawCommand extends Command {
 			channel.sendMessage("Error: Invalid action\nValid actions are: add, remove").queue();
 			return;
 		}
-		channel.sendMessage("Successfully modified permission structure!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully modified permission structure!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

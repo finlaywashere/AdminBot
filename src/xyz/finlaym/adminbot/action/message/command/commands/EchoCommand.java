@@ -13,11 +13,13 @@ public class EchoCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		String text = "";
 		for(int i = 1; i < command.length; i++) {
 			text += command[i] + " ";
 		}
 		channel.sendMessage(text).queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

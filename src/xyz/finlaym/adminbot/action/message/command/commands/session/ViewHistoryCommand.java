@@ -18,7 +18,7 @@ public class ViewHistoryCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		int max = 20;
 		long gid = channel.getGuild().getIdLong();
 		long uid = member.getIdLong();
@@ -64,5 +64,7 @@ public class ViewHistoryCommand extends Command{
 			m += "`"+elem.getMessage().getContentRaw()+"`\n";
 		}
 		channel.sendMessage(m).queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

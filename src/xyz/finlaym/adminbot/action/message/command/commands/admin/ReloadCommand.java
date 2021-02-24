@@ -15,7 +15,7 @@ public class ReloadCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		SwearsConfig sConfig = handler.getBot().getSwearsConfig();
 		try {
 			sConfig.loadSwears(channel.getGuild().getIdLong());
@@ -24,7 +24,10 @@ public class ReloadCommand extends Command{
 			channel.sendMessage("Failed to reload swear word list").queue();
 			return;
 		}
-		channel.sendMessage("Reloaded swear words!").queue();
+		if(!silence)
+			channel.sendMessage("Reloaded swear words!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 
 }

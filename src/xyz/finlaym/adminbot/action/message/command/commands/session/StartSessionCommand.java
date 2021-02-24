@@ -14,9 +14,12 @@ public class StartSessionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		handler.getBot().getSessionConfig().setSession(channel.getGuild().getIdLong(), member.getIdLong(), new Session());
-		channel.sendMessage("Started command session!").queue();
+		if(!silence)
+			channel.sendMessage("Started command session!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 
 }

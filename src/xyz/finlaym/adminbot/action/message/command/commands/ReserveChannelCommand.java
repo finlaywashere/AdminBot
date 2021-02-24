@@ -15,7 +15,7 @@ public class ReserveChannelCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		GuildVoiceState voiceState = member.getVoiceState();
 		if(voiceState.getChannel() == null) {
 			channel.sendMessage("You must be in a voice channel to reserve it!").queue();
@@ -23,6 +23,9 @@ public class ReserveChannelCommand extends Command{
 		}
 		VoiceChannel vc = member.getVoiceState().getChannel();
 		handler.getBot().getReservationManager().addReservation(vc,message.getMentionedUsers());
-		channel.sendMessage("Successfully reserved channel!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully reserved channel!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

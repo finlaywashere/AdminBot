@@ -18,7 +18,7 @@ public class RemovePermissionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
 		GroupIdentifier id = null;
 		if(message.getMentionedRoles().size() == 1) {
@@ -47,6 +47,9 @@ public class RemovePermissionCommand extends Command{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		channel.sendMessage("Successfully removed permission(s) from users/roles!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully removed permission(s) from users/roles!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

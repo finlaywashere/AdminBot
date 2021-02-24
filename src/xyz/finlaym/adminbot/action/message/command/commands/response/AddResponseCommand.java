@@ -17,7 +17,7 @@ public class AddResponseCommand extends Command {
 	}
 	
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		if(command.length < 3) {
 			channel.sendMessage(usage).queue();
 			return;
@@ -37,6 +37,9 @@ public class AddResponseCommand extends Command {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		channel.sendMessage("Successfully added custom response to database!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully added custom response to database!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

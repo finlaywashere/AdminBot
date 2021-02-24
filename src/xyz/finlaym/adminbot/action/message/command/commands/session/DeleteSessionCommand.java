@@ -16,7 +16,7 @@ public class DeleteSessionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		if(message.getMentionedUsers().size() > 0 && command.length > 1) {
 			long id;
 			if(message.getMentionedUsers().size() > 0)
@@ -43,6 +43,9 @@ public class DeleteSessionCommand extends Command{
 		}else {
 			handler.getBot().getSessionConfig().setSession(channel.getGuild().getIdLong(), member.getIdLong(), null);
 		}
-		channel.sendMessage("Successfully deleted session!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully deleted session!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

@@ -14,7 +14,7 @@ public class SetSessionVariableCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		if(command.length < 3) {
 			channel.sendMessage("Usage: "+usage).queue();
 			return;
@@ -36,6 +36,9 @@ public class SetSessionVariableCommand extends Command{
 			}
 		}
 		s.getVariables().put(key, value);
-		channel.sendMessage("Successfully set session variable!").queue();
+		if(!silence)
+			channel.sendMessage("Successfully set session variable!").queue();
+		if(silence)
+			message.delete().queue();
 	}
 }

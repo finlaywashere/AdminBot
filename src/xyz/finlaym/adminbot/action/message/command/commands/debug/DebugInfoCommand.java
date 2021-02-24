@@ -18,7 +18,7 @@ public class DebugInfoCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message) {
+	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		String s = "Guild ID: `"+channel.getGuild().getIdLong()+"`\n";
 		s += "Channel ID: `"+channel.getIdLong()+"`\n";
 		s += "Sender ID: `"+member.getIdLong()+"`\n";
@@ -27,6 +27,8 @@ public class DebugInfoCommand extends Command{
 			s += "# Of Loaded Permission Groups: `"+perms.size()+"`";
 		
 		channel.sendMessage(s).queue();
+		if(silence)
+			message.delete().queue();
 	}
 
 }
