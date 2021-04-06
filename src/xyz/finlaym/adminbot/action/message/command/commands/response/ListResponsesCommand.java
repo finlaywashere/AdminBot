@@ -21,7 +21,7 @@ public class ListResponsesCommand extends Command{
 		String s = "Custom Responses:\nId\tTrigger\t\tResponse\n";
 		for(int i = 0; i < responses.size(); i++) {
 			CustomResponse r = responses.get(i);
-			s += "\n"+(i+1)+"\t"+r.getTrigger()+"\t\t"+r.getResponse();
+			s += "\n"+(i+1)+"\t"+r.getTrigger()+"\t\t"+r.getResponse().replaceAll("&comma", ",");
 		}
 		channel.sendMessage(s).queue();
 		if(silence)

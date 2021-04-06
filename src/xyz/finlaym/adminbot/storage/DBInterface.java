@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ public class DBInterface {
 	
 	private String dbName,username,password;
 	
-	public void init(String dbName, String username, String password) {
+	public void init(String dbName, String username, String password) throws Exception{
 		this.dbName = dbName;
 		this.username = username;
 		this.password = password;
@@ -36,10 +37,12 @@ public class DBInterface {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/"+dbName, username, password);
 		}catch(Exception e) {
-			logger.error("UwU DBInterface go not brrrr", e.getCause());
+			logger.error("UwU DBInterface go not brrrr");
+			throw e;
 		}
 	}
 	public void fixConnection() throws Exception{
+		conn.close();
 		conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/"+dbName, username, password);
 	}
 	public void getServerConfig(long id, ServerConfig sConfig) throws Exception{
@@ -47,10 +50,13 @@ public class DBInterface {
 			Statement statement = conn.createStatement();
 			ResultSet rs = statement.executeQuery("SELECT * FROM `server_config` WHERE `id`=\""+id+"\";");
 			rs.next();
-			if(rs.wasNull())
-				return;
-			sConfig.setLevelsEnabled(rs.getLong("id"),rs.getBoolean("levelsEnabled"));
-			sConfig.setResponses(rs.getLong("id"), CustomResponse.fromString(rs.getString("customResponses")));
+			try {
+				sConfig.setLevelsEnabled(rs.getLong("id"),rs.getBoolean("levelsEnabled"));
+				sConfig.setResponses(rs.getLong("id"), CustomResponse.fromString(rs.getString("customResponses")));
+			}catch(SQLException e) {
+				logger.debug("SQL exception encountered, likely null row");
+				logger.trace("SQL exception encountered, likely null row", e);
+			}
 			rs.close();
 		}catch(Exception e) {
 			System.err.println("Error reported! Attempting to recover");
@@ -92,8 +98,13 @@ public class DBInterface {
 		try {
 			Statement statement = conn.createStatement();
 			ResultSet rs = statement.executeQuery("SELECT * FROM `server_swears` WHERE `id`=\""+id+"\";");
-			while(rs.next()) {
-				sConf.addSwear(SwearWord.fromString(rs.getString("word")), rs.getLong("id"));
+			try {
+				while(rs.next()) {
+					sConf.addSwear(SwearWord.fromString(rs.getString("word")), rs.getLong("id"));
+				}
+			}catch(SQLException e) {
+				logger.debug("SQL exception encountered, likely null row");
+				logger.trace("SQL exception encountered, likely null row", e);
 			}
 			rs.close();
 		}catch(Exception e) {
@@ -123,9 +134,12 @@ public class DBInterface {
 		try {
 			Statement statement = conn.createStatement();
 			ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
-			rs.next();
-			if(rs.isAfterLast())
-				return;
+			try {
+				rs.next();
+			}catch(SQLException e) {
+				logger.debug("SQL exception encountered, likely null row");
+				logger.trace("SQL exception encountered, likely null row", e);
+			}
 			uConf.setUserLevels(rs.getLong("gid"),rs.getLong("id"), rs.getInt("level"));
 		}catch(Exception e) {
 			System.err.println("Error reported! Attempting to recover");
@@ -162,7 +176,12 @@ public class DBInterface {
 		try {
 			Statement statement = conn.createStatement();
 			ResultSet rs = statement.executeQuery("SELECT * FROM `group_perms` WHERE `identifier`=\""+group.getIdentifier()+"\" AND `type`=\""+group.getType()+"\" AND `gid`=\""+gid+"\";");
-			rs.next();
+			try {
+				rs.next();
+			}catch(SQLException e) {
+				logger.debug("SQL exception encountered, likely null row");
+				logger.trace("SQL exception encountered, likely null row", e);
+			}
 			List<Permission> perms = new ArrayList<Permission>();
 			try {
 				for(String s : rs.getString("permissions").split(":")) {

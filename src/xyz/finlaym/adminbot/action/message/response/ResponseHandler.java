@@ -33,6 +33,7 @@ public class ResponseHandler {
 	private static String replace(String s, Member author, TextChannel channel, Message message) {
 		s = s.replace("$u", author.getAsMention());
 		s = s.replace("$c", channel.getAsMention());
+		s = s.replace("&command", ",");
 		return s;
 	}
 }

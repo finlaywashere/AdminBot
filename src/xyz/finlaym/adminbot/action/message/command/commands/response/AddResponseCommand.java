@@ -30,7 +30,7 @@ public class AddResponseCommand extends Command {
 		List<CustomResponse> currResponses = handler.getBot().getServerConfig().getResponses(channel.getGuild().getIdLong());
 		if(currResponses == null)
 			currResponses = new ArrayList<CustomResponse>();
-		currResponses.add(CustomResponse.fromStringSingle(response+","+trigger));
+		currResponses.add(CustomResponse.fromStringSingle(response.replaceAll(",", "&comma")+","+trigger));
 		handler.getBot().getServerConfig().setResponses(channel.getGuild().getIdLong(), currResponses);
 		try {
 			handler.getBot().getServerConfig().saveConfig(channel.getGuild().getIdLong());
