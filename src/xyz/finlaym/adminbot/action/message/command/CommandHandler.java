@@ -13,7 +13,6 @@ import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.action.message.command.commands.EchoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.HelpCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.ReserveChannelCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.AddSwearCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.ReloadCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RemoveReservationCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RolesMenuCommand;
@@ -30,6 +29,9 @@ import xyz.finlaym.adminbot.action.message.command.commands.session.DeleteSessio
 import xyz.finlaym.adminbot.action.message.command.commands.session.SetSessionVariableCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.StartSessionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.ViewHistoryCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.swear.AddSwearCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.swear.ListSwearsCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.swear.DeleteSwearCommand;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.utils.LoggerHelper;
 
@@ -66,6 +68,8 @@ public class CommandHandler {
 		this.commands.add(new EchoCommand());
 		this.commands.add(new ListResponsesCommand());
 		this.commands.add(new DeleteResponseCommand());
+		this.commands.add(new DeleteSwearCommand());
+		this.commands.add(new ListSwearsCommand());
 	}
 	public Bot getBot() {
 		return bot;

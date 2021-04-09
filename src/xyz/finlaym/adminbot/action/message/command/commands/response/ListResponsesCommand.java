@@ -18,6 +18,20 @@ public class ListResponsesCommand extends Command{
 	@Override
 	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		List<CustomResponse> responses = handler.getBot().getServerConfig().getResponses(channel.getGuild().getIdLong());
+		if(responses == null) {
+			try {
+				handler.getBot().getServerConfig().loadConfig(channel.getGuild().getIdLong());
+			} catch (Exception e) {
+				e.printStackTrace();
+				channel.sendMessage("Error: Failed to load database!").queue();
+				return;
+			}
+			responses = handler.getBot().getServerConfig().getResponses(channel.getGuild().getIdLong());
+			if(responses == null) {
+				channel.sendMessage("This guild has no custom responses!").queue();
+				return;
+			}
+		}
 		String s = "Custom Responses:\nId\tTrigger\t\tResponse\n";
 		for(int i = 0; i < responses.size(); i++) {
 			CustomResponse r = responses.get(i);

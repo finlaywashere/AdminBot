@@ -27,6 +27,19 @@ public class DeleteResponseCommand extends Command{
 		int id = Integer.valueOf(command[1])-1;
 		long gid = channel.getGuild().getIdLong();
 		ServerConfig sConfig = handler.getBot().getServerConfig();
+		if(sConfig.getResponses(gid) == null) {
+			try {
+				sConfig.loadConfig(gid);
+			} catch (Exception e) {
+				e.printStackTrace();
+				channel.sendMessage("Error: Failed to load database!").queue();
+				return;
+			}
+			if(sConfig.getResponses(gid) == null) {
+				channel.sendMessage("This guild has no custom responses!").queue();
+				return;
+			}
+		}
 		if(id < 0 || id >= sConfig.getResponses(gid).size()) {
 			channel.sendMessage("Error: Id is less than 1 or greater than the number of responses!\nUse `-listresponses` to find an id to delete").queue();
 			return;
