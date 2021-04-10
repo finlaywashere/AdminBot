@@ -3,7 +3,6 @@ package xyz.finlaym.adminbot;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.Scanner;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
@@ -36,8 +35,6 @@ public class Bot extends ListenerAdapter {
 	}
 	
 	public static Bot INSTANCE;
-	
-	private static final File TOKEN_FILE = new File("token.priv");
 	private static final Logger logger = LoggerFactory.getLogger(Bot.class);
 	
 	
@@ -54,11 +51,11 @@ public class Bot extends ListenerAdapter {
 		INSTANCE = new Bot();
 	}
 	public Bot() throws Exception{
-		Scanner in = new Scanner(TOKEN_FILE);
-		String token = in.nextLine();
-		in.close();
+		String token = System.getenv("TOKEN");
+		String dbUser = System.getenv("DBUSER");
+		String dbPass = System.getenv("DBPASS");
 		dbInterface = new DBInterface();
-		dbInterface.init("adminbot", "bot", "bot");
+		dbInterface.init("adminbot", dbUser, dbPass);
 		rManager = new ReservationManager();
 		JDABuilder.createDefault(token).addEventListeners(new MessageListener(this), new ReactionListener(), rManager).
 				setAutoReconnect(true).setActivity(Activity.watching("you")).
