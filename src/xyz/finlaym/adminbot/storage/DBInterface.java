@@ -12,11 +12,15 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 import xyz.finlaym.adminbot.action.message.swear.SwearWord;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
+import xyz.finlaym.adminbot.action.reserve.PermissionState;
+import xyz.finlaym.adminbot.action.reserve.ReservationState;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
+import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
 import xyz.finlaym.adminbot.storage.config.UserLevelConfig;
@@ -88,6 +92,74 @@ public class DBInterface {
 				pS.setString(2, responses);
 				pS.executeUpdate();
 			}
+		}catch(Exception e) {
+			System.err.println("Error reported! Attempting to recover");
+			e.printStackTrace();
+			fixConnection();
+		}
+	}
+	public void getReservationConfig(ReservationConfig rConfig, Bot bot) throws Exception{
+		try {
+			Statement statement = conn.createStatement();
+			ResultSet rs = statement.executeQuery("SELECT * FROM `server_reservations`;");
+			try {
+				while(rs.next()) {
+					String[] state = rs.getString("state").split("\\?");
+					PermissionState[] array = new PermissionState[state.length];
+					for(int i = 0; i < array.length; i++) {
+						array[i] = PermissionState.fromString(state[i], bot.getJDA());
+					}
+					rConfig.addReservationDB(rs.getLong("gid"), rs.getLong("vid"), rs.getLong("cid"), array);
+				}
+			}catch(SQLException e) {
+				logger.debug("SQL exception encountered, likely null row");
+				logger.trace("SQL exception encountered, likely null row", e);
+			}
+			rs.close();
+		}catch(Exception e) {
+			System.err.println("Error reported! Attempting to recover");
+			e.printStackTrace();
+			fixConnection();
+		}
+	}
+	public void deleteReservations() throws Exception{
+		try {
+			Statement statement = conn.createStatement();
+			statement.executeUpdate("DELETE FROM `server_reservations` WHERE 1;"); // Delete all reservations
+		}catch(Exception e) {
+			System.err.println("Error reported! Attempting to recover");
+			e.printStackTrace();
+			fixConnection();
+		}
+	}
+	public void removeReservation(long gid, long vid) throws Exception{
+		try {
+			PreparedStatement statement = conn.prepareStatement("DELETE FROM `server_reservations` WHERE `gid`=? AND `vid`=?;");
+			statement.setLong(1, gid);
+			statement.setLong(2, vid);
+			statement.executeUpdate();
+		}catch(Exception e) {
+			System.err.println("Error reported! Attempting to recover");
+			e.printStackTrace();
+			fixConnection();
+		}
+	}
+	public void addReservation(ReservationState state) throws Exception{
+		try {
+			PreparedStatement statement = conn.prepareStatement("INSERT INTO `server_reservations` (`gid`, `vid`, `cid`, `state`) VALUES (?,?,?,?);");
+			statement.setLong(1, state.getGid());
+			statement.setLong(2, state.getVid());
+			statement.setLong(3, state.getCid());
+			String string = "";
+			for(int i = 0; i < state.getState().length; i++) {
+				if(string.length() == 0) {
+					string += state.getState()[i].toString();
+				}else {
+					string += "?"+state.getState()[i].toString();
+				}
+			}
+			statement.setString(4, string);
+			statement.executeUpdate();
 		}catch(Exception e) {
 			System.err.println("Error reported! Attempting to recover");
 			e.printStackTrace();

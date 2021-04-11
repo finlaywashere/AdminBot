@@ -1,24 +1,23 @@
 package xyz.finlaym.adminbot.action.reserve;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.PermissionOverride;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.ChannelManager;
+import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 
 public class ReservationManager extends ListenerAdapter{
 	
-	private Map<Long,Map<Long,ChannelState>> states;
-	
-	public ReservationManager() {
-		this.states = new HashMap<Long,Map<Long,ChannelState>>();
+	private ReservationConfig rConfig;
+	public ReservationManager(ReservationConfig rConfig) {
+		this.rConfig = rConfig;
 	}
 	
 	@Override
@@ -26,41 +25,43 @@ public class ReservationManager extends ListenerAdapter{
 		VoiceChannel vc = event.getChannelLeft();
 		if(vc.getMembers().size() == 0) {
 			// Everyone left the VC
-			removeReservation(vc);
+			try {
+				removeReservation(vc);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
-	public void removeReservation(VoiceChannel vc) {
-		if(!states.containsKey(vc.getGuild().getIdLong()))
+	public void removeReservation(VoiceChannel vc) throws Exception {
+		ReservationState state = rConfig.getReservation(vc.getGuild().getIdLong(), vc.getIdLong());
+		if(state == null)
 			return;
-		Map<Long,ChannelState> gStates = states.get(vc.getGuild().getIdLong());
-		long id = vc.getIdLong();
-		if(!gStates.containsKey(id)) 
-			return;
+		
 		ChannelManager manager = vc.getManager();
 			
 		for(PermissionOverride p : vc.getPermissionOverrides()) {
 			manager.removePermissionOverride(p.getPermissionHolder());
 		}
 		
-		for(PermissionState state : gStates.get(id).getPrevState()){
-			manager.putPermissionOverride(state.getHolder(), state.getAllowed(), state.getDenied());
+		for(PermissionState perm : state.getState()){
+			manager.putPermissionOverride(perm.getHolder(), perm.getAllowed(), perm.getDenied());
 		}
 		manager.queue();
-		gStates.remove(id);
-		states.put(id, gStates);
+		rConfig.removeReservation(vc.getGuild().getIdLong(), vc.getIdLong());
 	}
-	public void addReservation(VoiceChannel vc, List<User> users) {
-		Map<Long,ChannelState> gStates = states.get(vc.getGuild().getIdLong());
-		if(gStates != null && gStates.containsKey(vc.getIdLong()))
+	public void addReservation(VoiceChannel vc, List<User> users, TextChannel channel) throws Exception {
+		ReservationState state = rConfig.getReservation(vc.getGuild().getIdLong(), vc.getIdLong());
+		if(state != null)
 			return;
-		if(gStates == null)
-			gStates = new HashMap<Long,ChannelState>();
+		
 		List<PermissionOverride> overrides = vc.getPermissionOverrides();
-		List<PermissionState> statesL = new ArrayList<PermissionState>();
-		for(PermissionOverride o : overrides) {
-			statesL.add(new PermissionState(o.getAllowed(), o.getDenied(), o.getPermissionHolder()));
+		PermissionState[] statesL = new PermissionState[overrides.size()];
+		for(int i = 0; i < overrides.size(); i++) {
+			PermissionOverride o = overrides.get(i);
+			statesL[i] = new PermissionState(o.getAllowed(), o.getDenied(), o.getPermissionHolder());
 		}
-		gStates.put(vc.getIdLong(), new ChannelState(statesL));
+		state = new ReservationState(vc.getGuild().getIdLong(), vc.getIdLong(), channel.getIdLong(), statesL);
+		rConfig.addReservation(state);
 		ChannelManager manager = vc.getManager();
 		for(PermissionOverride p : vc.getPermissionOverrides()) {
 			manager.removePermissionOverride(p.getPermissionHolder());
@@ -77,9 +78,5 @@ public class ReservationManager extends ListenerAdapter{
 			manager.putPermissionOverride(vc.getGuild().getMember(u), perms, new ArrayList<Permission>());
 		}
 		manager.queue();
-		states.put(vc.getGuild().getIdLong(),gStates);
-	}
-	public Map<Long,Map<Long, ChannelState>> getStates() {
-		return states;
 	}
 }

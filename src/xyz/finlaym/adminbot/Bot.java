@@ -8,6 +8,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -19,6 +20,7 @@ import xyz.finlaym.adminbot.action.reaction.ReactionListener;
 import xyz.finlaym.adminbot.action.reserve.ReservationManager;
 import xyz.finlaym.adminbot.storage.DBInterface;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
+import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SessionConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
@@ -46,6 +48,9 @@ public class Bot extends ListenerAdapter {
 	private PermissionsConfig pConfig;
 	private ReservationManager rManager;
 	private SessionConfig sessionConfig;
+	private ReservationConfig rConfig;
+	
+	private JDA jda;
 	
 	public static void main(String[] args) throws Exception {
 		INSTANCE = new Bot();
@@ -56,13 +61,14 @@ public class Bot extends ListenerAdapter {
 		String dbPass = System.getenv("DBPASS");
 		dbInterface = new DBInterface();
 		dbInterface.init("adminbot", dbUser, dbPass);
-		rManager = new ReservationManager();
-		JDABuilder.createDefault(token).addEventListeners(new MessageListener(this), new ReactionListener(), rManager).
+		rConfig = new ReservationConfig(dbInterface,this);
+		rManager = new ReservationManager(rConfig);
+		jda = JDABuilder.createDefault(token).addEventListeners(new MessageListener(this), new ReactionListener(), rManager).
 				setAutoReconnect(true).setActivity(Activity.watching("you")).
 				enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES).
 				setChunkingFilter(ChunkingFilter.NONE).
-				setMemberCachePolicy(MemberCachePolicy.ALL).build();
-		
+				setMemberCachePolicy(MemberCachePolicy.ALL).build().awaitReady();
+		rConfig.prune(rManager,jda);
 		sConfig = new SwearsConfig(dbInterface);
 		uConfig = new UserLevelConfig(dbInterface);
 		seConfig = new ServerConfig(dbInterface);
@@ -88,5 +94,8 @@ public class Bot extends ListenerAdapter {
 	}
 	public SessionConfig getSessionConfig() {
 		return sessionConfig;
+	}
+	public JDA getJDA() {
+		return jda;
 	}
 }

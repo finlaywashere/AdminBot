@@ -22,7 +22,13 @@ public class ReserveChannelCommand extends Command{
 			return;
 		}
 		VoiceChannel vc = member.getVoiceState().getChannel();
-		handler.getBot().getReservationManager().addReservation(vc,message.getMentionedUsers());
+		try {
+			handler.getBot().getReservationManager().addReservation(vc,message.getMentionedUsers(),channel);
+		} catch (Exception e) {
+			e.printStackTrace();
+			channel.sendMessage("Critical error occurred while attempting to reserve channel!").queue();
+			return;
+		}
 		if(!silence)
 			channel.sendMessage("Successfully reserved channel!").queue();
 		if(silence)

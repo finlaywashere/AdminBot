@@ -32,7 +32,13 @@ public class RemoveReservationCommand extends Command{
 			}
 			vc = member.getVoiceState().getChannel();
 		}
-		handler.getBot().getReservationManager().removeReservation(vc);
+		try {
+			handler.getBot().getReservationManager().removeReservation(vc);
+		}catch(Exception e) {
+			e.printStackTrace();
+			channel.sendMessage("Critical error occurred while attempting to remove reservation!").queue();
+			return;
+		}
 		if(!silence)
 			channel.sendMessage("Successfully removed a reservation on channel \""+vc.getName()+"\"!").queue();
 		if(silence)

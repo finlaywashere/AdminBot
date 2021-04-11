@@ -10,4 +10,7 @@ public class LoggerHelper {
 	public static void log(Logger logger, Guild guild, TextChannel channel, User user, String message) {
 		logger.info("Guild "+guild.getIdLong()+" (\""+guild.getName()+"\"): User "+user.getIdLong()+" (\""+user.getAsTag()+"\") "+message);
 	}
+	public static void log(Logger logger, String message) {
+		logger.info(message);
+	}
 }
