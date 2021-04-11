@@ -26,6 +26,7 @@ dependencies {
 	compile group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0-alpha1'
 	compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.15'
 	runtime "mysql:mysql-connector-java:8.0.15"
+	compile group: 'javax.mail', name: 'mail', version: '1.5.0-b01'
 }
 
 jar {
