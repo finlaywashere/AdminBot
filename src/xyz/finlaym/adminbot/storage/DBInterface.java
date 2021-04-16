@@ -23,7 +23,7 @@ import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
-import xyz.finlaym.adminbot.storage.config.UserLevelConfig;
+import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 
 public class DBInterface {
 	
@@ -55,7 +55,7 @@ public class DBInterface {
 			ResultSet rs = statement.executeQuery("SELECT * FROM `server_config` WHERE `id`=\""+id+"\";");
 			rs.next();
 			try {
-				sConfig.setLevelsEnabled(rs.getLong("id"),rs.getBoolean("levelsEnabled"));
+				sConfig.setFlags(rs.getLong("id"),rs.getLong("flags"));
 				sConfig.setResponses(rs.getLong("id"), CustomResponse.fromString(rs.getString("customResponses")));
 			}catch(SQLException e) {
 				logger.debug("SQL exception encountered, likely null row");
@@ -74,21 +74,23 @@ public class DBInterface {
 			ResultSet rs = statement.executeQuery("SELECT * FROM `server_config` WHERE `id`=\""+id+"\";");
 			rs.last();
 			String responses = "";
-			for(CustomResponse r : sConfig.getResponses(id)) {
-				responses += ":"+r.toString();
+			if(sConfig.getResponses(id) != null) {
+				for(CustomResponse r : sConfig.getResponses(id)) {
+					responses += ":"+r.toString();
+				}
 			}
 			if(responses.length() > 0)
 				responses = responses.substring(1);
 			if(rs.getRow() == 0) {
-				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `levelsEnabled`, `customResponses`) VALUES(?,?,?);");
+				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `flags`, `customResponses`) VALUES(?,?,?);");
 				pS.setLong(1, id);
-				pS.setBoolean(2, sConfig.getLevelsEnabled(id));
+				pS.setLong(2, sConfig.getFlags(id));
 				pS.setString(3, responses);
 				pS.executeUpdate();
 			}else {
-				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `levelsEnabled` = ?, `customResponses` = ? WHERE `id` = ?");
+				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ? WHERE `id` = ?");
 				pS.setLong(3, id);
-				pS.setBoolean(1, sConfig.getLevelsEnabled(id));
+				pS.setLong(1, sConfig.getFlags(id));
 				pS.setString(2, responses);
 				pS.executeUpdate();
 			}
@@ -202,39 +204,39 @@ public class DBInterface {
 			fixConnection();
 		}
 	}
-	public void loadUserLevels(long gid, long id, UserLevelConfig uConf) throws Exception{
+	public void loadCurrency(long gid, long id, CurrencyConfig uConf) throws Exception{
 		try {
 			Statement statement = conn.createStatement();
-			ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
+			ResultSet rs = statement.executeQuery("SELECT * FROM `user_currency` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
 			try {
 				rs.next();
 			}catch(SQLException e) {
 				logger.debug("SQL exception encountered, likely null row");
 				logger.trace("SQL exception encountered, likely null row", e);
 			}
-			uConf.setUserLevels(rs.getLong("gid"),rs.getLong("id"), rs.getInt("level"));
+			uConf.setCurrency(rs.getLong("gid"),rs.getLong("id"), rs.getInt("amount"));
 		}catch(Exception e) {
 			System.err.println("Error reported! Attempting to recover");
 			e.printStackTrace();
 			fixConnection();
 		}
 	}
-	public void saveUserLevels(long gid, long id, UserLevelConfig uConf) throws Exception{
+	public void saveCurrency(long gid, long id, CurrencyConfig uConf) throws Exception{
 		try {
 			Statement statement = conn.createStatement();
-			ResultSet rs = statement.executeQuery("SELECT * FROM `user_levels` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
+			ResultSet rs = statement.executeQuery("SELECT * FROM `user_currency` WHERE `id`=\""+id+"\" AND `gid`=\""+gid+"\";");
 			rs.last();
 			if(rs.getRow() == 0) {
-				PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_levels` (`gid`, `id`, `level`) VALUES(?, ?, ?);");
+				PreparedStatement pS = conn.prepareStatement("INSERT INTO `user_currency` (`gid`, `id`, `amount`) VALUES(?, ?, ?);");
 				pS.setLong(1, gid);
 				pS.setLong(2, id);
-				pS.setInt(3, uConf.getUserLevels(gid,id));
+				pS.setInt(3, uConf.getCurrency(gid,id));
 				pS.executeUpdate();
 			}else {
-				PreparedStatement pS = conn.prepareStatement("UPDATE `user_levels` SET `level`=? WHERE `id`=? AND `gid`=?;");
+				PreparedStatement pS = conn.prepareStatement("UPDATE `user_currency` SET `amount`=? WHERE `id`=? AND `gid`=?;");
 				pS.setLong(2, id);
 				pS.setLong(3, gid);
-				pS.setInt(1, uConf.getUserLevels(gid,id));
+				pS.setInt(1, uConf.getCurrency(gid,id));
 				pS.executeUpdate();
 			}
 		}catch(Exception e) {

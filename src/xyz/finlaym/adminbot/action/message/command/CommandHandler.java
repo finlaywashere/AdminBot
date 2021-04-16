@@ -13,15 +13,17 @@ import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.action.message.command.commands.EchoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.HelpCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.ReserveChannelCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.GetFlagsCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.ReloadCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RemoveReservationCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RolesMenuCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.AddPermissionCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.ListPermissionsCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.ModifyPermissionsRawCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.RemovePermissionCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.admin.permissions.SearchPermissionCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.SetFlagCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.permissions.AddPermissionCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.permissions.ListPermissionsCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.permissions.ModifyPermissionsRawCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.permissions.RemovePermissionCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.permissions.SearchPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.response.AddResponseCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.response.DeleteResponseCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.response.ListResponsesCommand;
@@ -30,8 +32,8 @@ import xyz.finlaym.adminbot.action.message.command.commands.session.SetSessionVa
 import xyz.finlaym.adminbot.action.message.command.commands.session.StartSessionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.ViewHistoryCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.swear.AddSwearCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.swear.ListSwearsCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.swear.DeleteSwearCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.swear.ListSwearsCommand;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.utils.LoggerHelper;
 
@@ -70,6 +72,8 @@ public class CommandHandler {
 		this.commands.add(new DeleteResponseCommand());
 		this.commands.add(new DeleteSwearCommand());
 		this.commands.add(new ListSwearsCommand());
+		this.commands.add(new SetFlagCommand());
+		this.commands.add(new GetFlagsCommand());
 	}
 	public Bot getBot() {
 		return bot;

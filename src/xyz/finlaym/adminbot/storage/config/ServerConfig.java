@@ -8,12 +8,15 @@ import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 import xyz.finlaym.adminbot.storage.DBInterface;
 
 public class ServerConfig {
+	
+	public static final int CURRENCY_FLAG = 1 << 0;
+	
 	/**
 	 * Config for levels (users level up by sending messages)
 	 * Key: Guild id as long
 	 * Value: True if guild has levels enabled, false otherwise
 	 */
-	private Map<Long,Boolean> levelsEnabled;
+	private Map<Long,Long> flags;
 	/**
 	 * Config for custom responses (look for pattern and send response)
 	 * Key: Guild id as long
@@ -23,7 +26,7 @@ public class ServerConfig {
 	private DBInterface dbInterface;
 	
 	public ServerConfig(DBInterface dbInterface) {
-		this.levelsEnabled = new HashMap<Long,Boolean>();
+		this.flags = new HashMap<Long,Long>();
 		this.responses = new HashMap<Long,List<CustomResponse>>();
 		this.dbInterface = dbInterface;
 	}
@@ -33,14 +36,13 @@ public class ServerConfig {
 	public void loadConfig(long id) throws Exception{
 		dbInterface.getServerConfig(id, this);
 	}
-	public boolean getLevelsEnabled(long id) {
-		if(!levelsEnabled.containsKey(id))
-			return false;
-		boolean levelsEnabledB = levelsEnabled.get(id);
-		return levelsEnabledB;
+	public long getFlags(long id) {
+		if(!flags.containsKey(id))
+			return 0;
+		return flags.get(id);
 	}
-	public void setLevelsEnabled(long id, boolean value) {
-		levelsEnabled.put(id, value);
+	public void setFlags(long id, long value) {
+		flags.put(id, value);
 	}
 	public List<CustomResponse> getResponses(long gid){
 		return responses.get(gid);

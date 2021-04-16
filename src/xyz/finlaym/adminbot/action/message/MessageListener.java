@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
-import xyz.finlaym.adminbot.action.message.level.LevelHandler;
+import xyz.finlaym.adminbot.action.message.currency.CurrencyHandler;
 import xyz.finlaym.adminbot.action.message.response.ResponseHandler;
 import xyz.finlaym.adminbot.action.message.swear.SwearHandler;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
@@ -23,7 +23,7 @@ public class MessageListener extends ListenerAdapter{
 	private static final Logger logger = LoggerFactory.getLogger(MessageListener.class);
 	
 	private Bot bot;
-	private LevelHandler lHandler;
+	private CurrencyHandler lHandler;
 	private SwearHandler sHandler;
 	private CommandHandler cHandler;
 	private ResponseHandler rHandler;
@@ -31,7 +31,7 @@ public class MessageListener extends ListenerAdapter{
 	public MessageListener(Bot bot) {
 		this.bot = bot;
 		this.rHandler = new ResponseHandler(bot);
-		this.lHandler = new LevelHandler(bot);
+		this.lHandler = new CurrencyHandler(bot);
 		this.sHandler = new SwearHandler(bot);
 		this.cHandler = new CommandHandler(bot);
 	}

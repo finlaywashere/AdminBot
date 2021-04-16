@@ -1,4 +1,4 @@
-package xyz.finlaym.adminbot.action.message.level;
+package xyz.finlaym.adminbot.action.message.currency;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,55 +9,43 @@ import org.slf4j.LoggerFactory;
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
-import xyz.finlaym.adminbot.storage.config.UserLevelConfig;
+import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 
-public class LevelHandler {
+public class CurrencyHandler {
 	
-	private static final Logger logger = LoggerFactory.getLogger(LevelHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(CurrencyHandler.class);
 
 	private Map<Long,Integer> currMessageCount = new HashMap<Long,Integer>();
 	private Bot bot;
 	
-	public LevelHandler(Bot bot) {
+	public CurrencyHandler(Bot bot) {
 		this.bot = bot;
 	}
 
 	public Bot getBot() {
 		return bot;
 	}
-	private int computeLevelUpLevels(int currLevel) {
-		if(currLevel == 1)
-			return 5;
-		int required = 5;
-		for(int i = 1; i <= currLevel; i++) {
-			required += i;
-			if(required > 100)
-				return 100;
-		}
-		
-		return required;
-	}
+	
 	public void countMessages(long gid, long id, TextChannel channel, String mention) {
 		ServerConfig seConfig = bot.getServerConfig();
-		if(!seConfig.getLevelsEnabled(id))
+		if((seConfig.getFlags(id) & ServerConfig.CURRENCY_FLAG) == 1)
 			return;
 		if(!currMessageCount.containsKey(id)) {
 			currMessageCount.put(id, 1);
 			return;
 		}
-		UserLevelConfig uConfig = bot.getUserLevelConfig();
+		CurrencyConfig cConfig = bot.getCurrencyConfig();
 		int messageCount = currMessageCount.get(id);
 		messageCount++;
-		int level = uConfig.getUserLevels(gid, id);
-		if(messageCount >= computeLevelUpLevels(level)) {
+		int level = cConfig.getCurrency(gid, id);
+		if(messageCount >= 10) {
 			messageCount = 0;
-			uConfig.setUserLevels(gid, id, level+1);
+			cConfig.setCurrency(gid, id, level+1);
 			try {
-				uConfig.saveLevels(gid, id);
+				cConfig.saveCurrency(gid, id);
 			} catch (Exception e) {
 				logger.error("UwU program did an oopsie woopsie when it twiedd to swave the fwile", e.getCause());
 			}
-			channel.sendMessage("Congratulations "+mention+" for leveling up to level "+(level+1)+"!").queue();
 		}
 		currMessageCount.put(id, messageCount);
 	}

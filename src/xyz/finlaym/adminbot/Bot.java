@@ -24,7 +24,7 @@ import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SessionConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
-import xyz.finlaym.adminbot.storage.config.UserLevelConfig;
+import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 
 public class Bot extends ListenerAdapter {
 
@@ -43,7 +43,7 @@ public class Bot extends ListenerAdapter {
 	private DBInterface dbInterface;
 	
 	private SwearsConfig sConfig;
-	private UserLevelConfig uConfig;
+	private CurrencyConfig cConfig;
 	private ServerConfig seConfig;
 	private PermissionsConfig pConfig;
 	private ReservationManager rManager;
@@ -70,7 +70,7 @@ public class Bot extends ListenerAdapter {
 				setMemberCachePolicy(MemberCachePolicy.ALL).build().awaitReady();
 		rConfig.prune(rManager,jda);
 		sConfig = new SwearsConfig(dbInterface);
-		uConfig = new UserLevelConfig(dbInterface);
+		cConfig = new CurrencyConfig(dbInterface);
 		seConfig = new ServerConfig(dbInterface);
 		pConfig = new PermissionsConfig(dbInterface);
 		sessionConfig = new SessionConfig();
@@ -83,8 +83,8 @@ public class Bot extends ListenerAdapter {
 	public SwearsConfig getSwearsConfig() {
 		return sConfig;
 	}
-	public UserLevelConfig getUserLevelConfig() {
-		return uConfig;
+	public CurrencyConfig getCurrencyConfig() {
+		return cConfig;
 	}
 	public PermissionsConfig getPermissionsConfig() {
 		return pConfig;

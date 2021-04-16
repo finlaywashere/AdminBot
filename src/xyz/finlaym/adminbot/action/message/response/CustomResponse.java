@@ -33,6 +33,8 @@ public class CustomResponse {
 		return r;
 	}
 	public static List<CustomResponse> fromString(String s){
+		if(s.isEmpty())
+			return null;
 		List<CustomResponse> responses = new ArrayList<CustomResponse>();
 		for(String s1 : s.split(":")) {
 			responses.add(fromStringSingle(s1));
