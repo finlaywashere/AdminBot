@@ -75,7 +75,7 @@ public class MessageListener extends ListenerAdapter{
 			if(swear) {
 				message.delete().queue();
 				channel.sendMessage("Swear, you will not!").queue();
-				LoggerHelper.log(logger, channel.getGuild(),channel, author, "said a swear word in channel \""+channel.getName()+"\", contents: \""+message.getContentRaw()+"\"");
+				LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "said a swear word in channel "+channel.getAsMention()+", contents: \""+message.getContentRaw()+"\"",bot.getDBInterface());
 			}
 		}
 		if(message.getContentRaw().startsWith("-")) {

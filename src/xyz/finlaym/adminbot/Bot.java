@@ -71,7 +71,7 @@ public class Bot extends ListenerAdapter {
 		rConfig.prune(rManager,jda);
 		sConfig = new SwearsConfig(dbInterface);
 		cConfig = new CurrencyConfig(dbInterface);
-		seConfig = new ServerConfig(dbInterface);
+		seConfig = new ServerConfig(dbInterface, this);
 		pConfig = new PermissionsConfig(dbInterface);
 		sessionConfig = new SessionConfig();
 		logger.info("Finished startup!");
@@ -98,4 +98,8 @@ public class Bot extends ListenerAdapter {
 	public JDA getJDA() {
 		return jda;
 	}
+	public DBInterface getDBInterface() {
+		return dbInterface;
+	}
+	
 }

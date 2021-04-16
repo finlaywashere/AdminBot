@@ -1,6 +1,7 @@
 package xyz.finlaym.adminbot.storage;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -57,6 +58,7 @@ public class DBInterface {
 			try {
 				sConfig.setFlags(rs.getLong("id"),rs.getLong("flags"));
 				sConfig.setResponses(rs.getLong("id"), CustomResponse.fromString(rs.getString("customResponses")));
+				sConfig.setLoggingChannel(rs.getLong("id"), rs.getLong("logging_channel"));
 			}catch(SQLException e) {
 				logger.debug("SQL exception encountered, likely null row");
 				logger.trace("SQL exception encountered, likely null row", e);
@@ -82,16 +84,18 @@ public class DBInterface {
 			if(responses.length() > 0)
 				responses = responses.substring(1);
 			if(rs.getRow() == 0) {
-				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `flags`, `customResponses`) VALUES(?,?,?);");
+				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `flags`, `customResponses`, `logging_channel`) VALUES(?,?,?,?);");
 				pS.setLong(1, id);
 				pS.setLong(2, sConfig.getFlags(id));
 				pS.setString(3, responses);
+				pS.setLong(4, sConfig.getLoggingChannel(id).getIdLong());
 				pS.executeUpdate();
 			}else {
-				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ? WHERE `id` = ?");
-				pS.setLong(3, id);
+				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ?, `logging_channel` = ? WHERE `id` = ?");
+				pS.setLong(4, id);
 				pS.setLong(1, sConfig.getFlags(id));
 				pS.setString(2, responses);
+				pS.setLong(3, sConfig.getLoggingChannel(id).getIdLong());
 				pS.executeUpdate();
 			}
 		}catch(Exception e) {
@@ -258,9 +262,16 @@ public class DBInterface {
 			}
 			List<Permission> perms = new ArrayList<Permission>();
 			try {
-				for(String s : rs.getString("permissions").split(":")) {
-					perms.add(new Permission(s));
+				String permissions = rs.getString("permissions");
+				if(permissions != null) {
+					for(String s : permissions.split(":")) {
+						perms.add(new Permission(s));
+					}
 				}
+			}catch (SQLException e) {
+				logger.debug("SQL exception encountered, likely null row");
+				logger.trace("SQL exception encountered, likely null row", e);
+				return;
 			}catch(Exception e) {
 				e.printStackTrace();
 				return;
@@ -306,6 +317,47 @@ public class DBInterface {
 			System.err.println("Error reported! Attempting to recover");
 			e.printStackTrace();
 			fixConnection();
+		}
+	}
+	public void logError(long gid, Throwable trace, String extra) {
+		try {
+			Date date = new Date(System.currentTimeMillis());
+			PreparedStatement statement = conn.prepareStatement("INSERT INTO `error_logging` (`gid`, `date`, `trace`, `extra`) VALUES (?,?,?,?);");
+			statement.setLong(1, gid);
+			statement.setDate(2, date);
+			String message = "";
+			if(trace != null)
+				message = trace.getMessage();
+			statement.setString(3, message);
+			statement.setString(4, extra);
+			statement.executeUpdate();
+		}catch(Exception e) {
+			System.err.println("Error reported! Attempting to recover");
+			e.printStackTrace();
+			try {
+				fixConnection();
+			}catch(Exception e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
+	public void logAccess(long gid, long uid, String info) {
+		try {
+			Date date = new Date(System.currentTimeMillis());
+			PreparedStatement statement = conn.prepareStatement("INSERT INTO `access_logging` (`gid`, `date`, `uid`, `info`) VALUES (?,?,?,?);");
+			statement.setLong(1, gid);
+			statement.setDate(2, date);
+			statement.setLong(3, uid);
+			statement.setString(4, info);
+			statement.executeUpdate();
+		}catch(Exception e) {
+			System.err.println("Error reported! Attempting to recover");
+			e.printStackTrace();
+			try {
+				fixConnection();
+			}catch(Exception e1) {
+				e1.printStackTrace();
+			}
 		}
 	}
 }

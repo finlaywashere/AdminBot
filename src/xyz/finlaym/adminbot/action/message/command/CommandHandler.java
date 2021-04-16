@@ -18,6 +18,7 @@ import xyz.finlaym.adminbot.action.message.command.commands.admin.ReloadCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RemoveReservationCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RolesMenuCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.SetFlagCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.admin.SetLoggingChannelCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.AddPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.ListPermissionsCommand;
@@ -74,6 +75,7 @@ public class CommandHandler {
 		this.commands.add(new ListSwearsCommand());
 		this.commands.add(new SetFlagCommand());
 		this.commands.add(new GetFlagsCommand());
+		this.commands.add(new SetLoggingChannelCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -95,11 +97,11 @@ public class CommandHandler {
 		for(Command c : commands) {
 			if(command[0].equalsIgnoreCase(c.getName())) {
 				if(pConfig.checkPermission(channel.getGuild(), member, c.getPermission())) {
-					LoggerHelper.log(logger, channel.getGuild(), channel, member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");
+					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"", bot.getDBInterface());
 					c.execute(member, channel, command, this, message, silenced);
 					return;
 				}else {
-					LoggerHelper.log(logger, channel.getGuild(), channel, member.getUser(), "tried to execute command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"");
+					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "tried to execute command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"", bot.getDBInterface());
 					channel.sendMessage("Error: Insufficient permissions to execute command!").queue();
 					return;
 				}
