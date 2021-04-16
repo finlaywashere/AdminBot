@@ -97,11 +97,11 @@ public class CommandHandler {
 		for(Command c : commands) {
 			if(command[0].equalsIgnoreCase(c.getName())) {
 				if(pConfig.checkPermission(channel.getGuild(), member, c.getPermission())) {
-					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"", bot.getDBInterface());
+					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
 					c.execute(member, channel, command, this, message, silenced);
 					return;
 				}else {
-					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "tried to execute command \""+message.getContentRaw()+"\" in channel \""+channel.getName()+"\"", bot.getDBInterface());
+					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "tried to execute command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
 					channel.sendMessage("Error: Insufficient permissions to execute command!").queue();
 					return;
 				}
