@@ -13,6 +13,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 import xyz.finlaym.adminbot.action.message.swear.SwearWord;
@@ -20,11 +21,11 @@ import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
 import xyz.finlaym.adminbot.action.reserve.PermissionState;
 import xyz.finlaym.adminbot.action.reserve.ReservationState;
+import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
-import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 
 public class DBInterface {
 	
@@ -84,18 +85,22 @@ public class DBInterface {
 			}
 			if(responses.length() > 0)
 				responses = responses.substring(1);
+			long loggingChannel = 0;
+			TextChannel channel = sConfig.getLoggingChannel(id);
+			if(channel != null)
+				loggingChannel = channel.getIdLong();
 			if(rs.getRow() == 0) {
 				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `flags`, `customResponses`, `logging_channel`, `currency_suffix`) VALUES(?,?,?,?,?);");
 				pS.setLong(1, id);
 				pS.setLong(2, sConfig.getFlags(id));
 				pS.setString(3, responses);
-				pS.setLong(4, sConfig.getLoggingChannel(id).getIdLong());
+				pS.setLong(4, loggingChannel);
 				pS.setString(5, sConfig.getCurrencySuffix(id));
 				pS.executeUpdate();
 			}else {
 				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ?, `logging_channel` = ?, `currency_suffix` = ? WHERE `id` = ?");
 				pS.setLong(5, id);
-				pS.setLong(1, sConfig.getFlags(id));
+				pS.setLong(1, loggingChannel);
 				pS.setString(2, responses);
 				pS.setLong(3, sConfig.getLoggingChannel(id).getIdLong());
 				pS.setString(4, sConfig.getCurrencySuffix(id));
