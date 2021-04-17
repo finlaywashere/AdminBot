@@ -40,6 +40,6 @@ public class SetCurrencySuffix extends Command{
 		if(!silence)
 			channel.sendMessage("Successfully set currency suffix to \""+suffix+"\"").queue();
 		if(silence)
-			message.delete();
+			message.delete().queue();
 	}
 }
