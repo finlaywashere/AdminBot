@@ -46,6 +46,7 @@ public class GetBalanceCommand extends Command{
 				channel.sendMessage("Critical Error: Failed to check permissions!").queue();
 				return;
 			}
+			return;
 		}
 		int balance = cConfig.getCurrency(gid,member.getIdLong());
 		if(balance == 0) {
