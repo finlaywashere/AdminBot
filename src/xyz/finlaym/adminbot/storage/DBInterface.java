@@ -99,9 +99,9 @@ public class DBInterface {
 			}else {
 				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ?, `logging_channel` = ?, `currency_suffix` = ? WHERE `id` = ?");
 				pS.setLong(5, id);
-				pS.setLong(1, loggingChannel);
+				pS.setLong(1, sConfig.getFlags(id));
 				pS.setString(2, responses);
-				pS.setLong(3, sConfig.getLoggingChannel(id).getIdLong());
+				pS.setLong(3, loggingChannel);
 				pS.setString(4, sConfig.getCurrencySuffix(id));
 				pS.executeUpdate();
 			}
