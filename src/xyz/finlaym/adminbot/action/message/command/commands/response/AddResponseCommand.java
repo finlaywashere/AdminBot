@@ -3,6 +3,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.response;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -12,6 +15,8 @@ import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 
 public class AddResponseCommand extends Command {
 
+	private static final Logger logger = LoggerFactory.getLogger(AddResponseCommand.class);
+	
 	public AddResponseCommand() {
 		super("addresponse", "command.addresponse", "-addresponse <trigger regex> <response>", "Sends a response every time a message matches a pattern, can substiture $u and $c for user mention and channel mention");
 	}
@@ -35,7 +40,9 @@ public class AddResponseCommand extends Command {
 		try {
 			handler.getBot().getServerConfig().saveConfig(channel.getGuild().getIdLong());
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to save server config in add response command", e);
+			channel.sendMessage("Critical Error: Failed to save responses!").queue();
+			return;
 		}
 		if(!silence)
 			channel.sendMessage("Successfully added custom response to database!").queue();

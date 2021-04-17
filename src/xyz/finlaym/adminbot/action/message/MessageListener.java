@@ -40,7 +40,7 @@ public class MessageListener extends ListenerAdapter{
 		try {
 			handleMessage(event.getTextChannel(), event.getMember(), event.getMessage());
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to handle message received in message listener", e);
 		}
 	}
 	@Override
@@ -48,7 +48,7 @@ public class MessageListener extends ListenerAdapter{
 		try {
 			handleMessage(event.getTextChannel(), event.getMember(), event.getMessage());
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to handle message updated in message listener", e);
 		}
 	}
 	private void handleMessage(TextChannel channel, Member member, Message message) throws Exception {
@@ -58,13 +58,13 @@ public class MessageListener extends ListenerAdapter{
 		try {
 			lHandler.countMessages(channel.getGuild().getIdLong(),author.getIdLong(),channel,author.getAsTag());
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to count messages in the message listener", e);
 			logger.error("OwO *flips table* I did an oopsie woopsie and bwoke!");
 		}
 		try {
 			rHandler.handleResponse(channel, member, message);
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to handle custom responses in message listener", e);
 		}
 		long gid = channel.getGuild().getIdLong();
 		PermissionsConfig pConfig = bot.getPermissionsConfig();

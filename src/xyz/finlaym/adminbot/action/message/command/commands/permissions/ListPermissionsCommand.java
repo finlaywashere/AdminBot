@@ -2,6 +2,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.permissions;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -14,6 +17,8 @@ import xyz.finlaym.adminbot.action.permission.PermissionDeclaration;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 
 public class ListPermissionsCommand extends Command{
+	
+	private static final Logger logger = LoggerFactory.getLogger(ListPermissionsCommand.class);
 
 	public ListPermissionsCommand() {
 		super("listpermissions", "command.listpermissions", "-listpermissions [user/group tag]", "Displays the permissions of a user or group", 
@@ -44,7 +49,7 @@ public class ListPermissionsCommand extends Command{
 					channel.sendMessage("Error: Insufficient permissions to view your permissions!").queue();
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to check permissions in list permissions command", e);
 				channel.sendMessage("Critical Error: Failed to check permissions!").queue();
 				return;
 			}
@@ -68,7 +73,7 @@ public class ListPermissionsCommand extends Command{
 						channel.sendMessage("Error: Insufficient permissions to view role's permissions!").queue();
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("Failed to check permissions in list permissions command", e);
 					channel.sendMessage("Critical Error: Failed to check permissions!").queue();
 					return;
 				}
@@ -91,7 +96,7 @@ public class ListPermissionsCommand extends Command{
 						channel.sendMessage("Error: Insufficient permissions to view user's permissions!").queue();
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("Failed to check permissions in list permissions command", e);
 					channel.sendMessage("Critical Error: Failed to check permissions!").queue();
 					return;
 				}

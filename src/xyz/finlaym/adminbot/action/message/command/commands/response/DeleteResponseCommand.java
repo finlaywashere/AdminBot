@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -10,6 +13,8 @@ import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class DeleteResponseCommand extends Command{
 
+	private static final Logger logger = LoggerFactory.getLogger(DeleteResponseCommand.class);
+	
 	public DeleteResponseCommand() {
 		super("deleteresponse","command.deleteresponse","-deleteresponse <id>","Deletes a trigger + response from the bot");
 	}
@@ -31,7 +36,7 @@ public class DeleteResponseCommand extends Command{
 			try {
 				sConfig.loadConfig(gid);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to load server config in delete response command",e);
 				channel.sendMessage("Error: Failed to load database!").queue();
 				return;
 			}
@@ -48,7 +53,7 @@ public class DeleteResponseCommand extends Command{
 		try {
 			sConfig.saveConfig(gid);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to save server config in delete response command",e);
 			channel.sendMessage("Error: Failed to save changes to database!").queue();
 			return;
 		}

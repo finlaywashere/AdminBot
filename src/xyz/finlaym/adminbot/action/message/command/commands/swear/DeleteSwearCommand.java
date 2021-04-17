@@ -2,6 +2,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.swear;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -14,6 +17,8 @@ import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class DeleteSwearCommand extends Command {
 
+	private static final Logger logger = LoggerFactory.getLogger(DeleteSwearCommand.class);
+	
 	public DeleteSwearCommand() {
 		super("deleteswear", "command.deleteswear", "-deleteswear <id>", "Deletes a swear word by id");
 	}
@@ -38,7 +43,7 @@ public class DeleteSwearCommand extends Command {
 			try {
 				sConfig.loadSwears(guild.getIdLong());
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to load server config in delete swear command", e);
 				channel.sendMessage("Error loading swears from database!").queue();
 				return;
 			}
@@ -56,7 +61,7 @@ public class DeleteSwearCommand extends Command {
 		try {
 			sConfig.saveSwears(guild.getIdLong());
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to save server config in delete swear command", e);
 			channel.sendMessage("Error: Failed to save changes to database!").queue();
 			return;
 		}

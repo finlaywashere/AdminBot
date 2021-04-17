@@ -43,7 +43,7 @@ public class DBInterface {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/"+dbName, username, password);
 		}catch(Exception e) {
-			logger.error("UwU DBInterface go not brrrr");
+			logger.error("UwU DBInterface go not brrrr", e);
 			throw e;
 		}
 	}
@@ -67,8 +67,7 @@ public class DBInterface {
 			}
 			rs.close();
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -107,8 +106,7 @@ public class DBInterface {
 				pS.executeUpdate();
 			}
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -131,8 +129,7 @@ public class DBInterface {
 			}
 			rs.close();
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -141,8 +138,7 @@ public class DBInterface {
 			Statement statement = conn.createStatement();
 			statement.executeUpdate("DELETE FROM `server_reservations` WHERE 1;"); // Delete all reservations
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -153,8 +149,7 @@ public class DBInterface {
 			statement.setLong(2, vid);
 			statement.executeUpdate();
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -175,8 +170,7 @@ public class DBInterface {
 			statement.setString(4, string);
 			statement.executeUpdate();
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -194,8 +188,7 @@ public class DBInterface {
 			}
 			rs.close();
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -211,8 +204,7 @@ public class DBInterface {
 				statement.executeUpdate();
 			}
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -228,8 +220,7 @@ public class DBInterface {
 			}
 			uConf.setCurrency(rs.getLong("gid"),rs.getLong("id"), rs.getInt("amount"));
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -252,8 +243,7 @@ public class DBInterface {
 				pS.executeUpdate();
 			}
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -281,13 +271,12 @@ public class DBInterface {
 				logger.trace("SQL exception encountered, likely null row", e);
 				return;
 			}catch(Exception e) {
-				e.printStackTrace();
+				logger.error("Database error", e);
 				return;
 			}
 			pConfig.setGroupPerms(rs.getLong("gid"), new GroupIdentifier(rs.getInt("type"), rs.getLong("identifier")), perms);
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -322,8 +311,7 @@ public class DBInterface {
 				pS.executeUpdate();
 			}
 		}catch(Exception e)  {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			fixConnection();
 		}
 	}
@@ -340,12 +328,11 @@ public class DBInterface {
 			statement.setString(4, extra);
 			statement.executeUpdate();
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			try {
 				fixConnection();
 			}catch(Exception e1) {
-				e1.printStackTrace();
+				logger.error("Failed to fix database connection", e1);
 			}
 		}
 	}
@@ -359,12 +346,11 @@ public class DBInterface {
 			statement.setString(4, info);
 			statement.executeUpdate();
 		}catch(Exception e) {
-			System.err.println("Error reported! Attempting to recover");
-			e.printStackTrace();
+			logger.error("Error reported! Attempting to recover", e);
 			try {
 				fixConnection();
 			}catch(Exception e1) {
-				e1.printStackTrace();
+				logger.error("Failed to fix database connection", e1);
 			}
 		}
 	}

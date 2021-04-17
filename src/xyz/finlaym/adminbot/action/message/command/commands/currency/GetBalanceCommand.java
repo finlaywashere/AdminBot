@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.currency;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -11,6 +14,8 @@ import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 
 public class GetBalanceCommand extends Command{
+
+	private static final Logger logger = LoggerFactory.getLogger(GetBalanceCommand.class);
 
 	public GetBalanceCommand() {
 		super("getbalance", "command.getbalance", "-getbalance [user tag]", "Gets a user's balance", ServerConfig.CURRENCY_FLAG, 
@@ -37,7 +42,7 @@ public class GetBalanceCommand extends Command{
 					channel.sendMessage("Error: Insufficient permissions to view another user's balance").queue();
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to check permissions in get balance command", e);
 				channel.sendMessage("Critical Error: Failed to check permissions!").queue();
 				return;
 			}
@@ -47,7 +52,7 @@ public class GetBalanceCommand extends Command{
 			try {
 				cConfig.loadCurrency(gid,member.getIdLong());
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to load currency from database in get balance command", e);
 				channel.sendMessage("Critical Error: Failed to load currency from database!").queue();
 				return;
 			}

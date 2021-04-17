@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.session;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -12,6 +15,8 @@ import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class ViewHistoryCommand extends Command{
 
+	private static final Logger logger = LoggerFactory.getLogger(ViewHistoryCommand.class);
+	
 	public ViewHistoryCommand() {
 		super("viewhistory", "command.viewhistory", "-viewhistory [max] [tag or id]", "Shows a user their history or someone else's",
 				new PermissionDeclaration("command.viewhistory.others", "Allows a user to view someone else's command history"));
@@ -45,7 +50,7 @@ public class ViewHistoryCommand extends Command{
 						}
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error("Error viewing user's session history",e);
 					channel.sendMessage("Critical Error: Failed to check user's permissions!").queue();
 					return;
 				}

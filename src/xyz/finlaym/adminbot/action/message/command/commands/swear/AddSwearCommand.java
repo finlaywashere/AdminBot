@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.swear;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -11,6 +14,8 @@ import xyz.finlaym.adminbot.storage.config.SwearsConfig;
 
 public class AddSwearCommand extends Command {
 
+	private static final Logger logger = LoggerFactory.getLogger(AddSwearCommand.class);
+	
 	public AddSwearCommand() {
 		super("addswear", "command.addswear", "-addswear <swear1> [swear2...]", "Adds a swear to a server's blacklist");
 	}
@@ -25,8 +30,9 @@ public class AddSwearCommand extends Command {
 				sConfig.addSwear(SwearWord.fromString(swear.replaceAll("_", " ")),guild.getIdLong());
 				sConfig.saveSwears(guild.getIdLong());
 			}catch(Exception e) {
-				e.printStackTrace();
-				System.err.println("Failed to add swear word to file!");
+				logger.error("Failed to save swear word in add swear command", e);
+				channel.sendMessage("Critical Error: Failed to save swear words to database!");
+				return;
 			}
 		}
 		if(!silence)

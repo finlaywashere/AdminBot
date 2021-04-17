@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.admin;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -11,6 +14,8 @@ import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class RemoveReservationCommand extends Command{
 
+	private static final Logger logger = LoggerFactory.getLogger(RemoveReservationCommand.class);
+	
 	public RemoveReservationCommand() {
 		super("unreserve", "command.unreserve", "-unreserve [id]", "Removes a reservation on either the channel you are in or a channel from its ID");
 	}
@@ -35,7 +40,7 @@ public class RemoveReservationCommand extends Command{
 		try {
 			handler.getBot().getReservationManager().removeReservation(vc);
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.error("Error in removing reservation command",e);
 			channel.sendMessage("Critical error occurred while attempting to remove reservation!").queue();
 			return;
 		}

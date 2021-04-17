@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.session;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -10,6 +13,8 @@ import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class DeleteSessionCommand extends Command{
 
+	private static final Logger logger = LoggerFactory.getLogger(DeleteSessionCommand.class);
+	
 	public DeleteSessionCommand() {
 		super("deletesession", "command.deletesession", "-deletesession [tag or id]", "Deletes either your own or someone else's command session", 
 				new PermissionDeclaration("command.deletesession.others", "Allows you to delete other people's command sessions"));
@@ -36,7 +41,7 @@ public class DeleteSessionCommand extends Command{
 					return;
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error deleting session",e);
 				channel.sendMessage("Critical Error: Failed to check user's permissions!").queue();
 				return;
 			}

@@ -2,6 +2,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.response;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -11,6 +14,8 @@ import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 
 public class ListResponsesCommand extends Command{
 
+	private static final Logger logger = LoggerFactory.getLogger(ListResponsesCommand.class);
+	
 	public ListResponsesCommand() {
 		super("listresponses", "command.listresponses", "-listresponses", "Lists all the bot responses in this guild");
 	}
@@ -22,7 +27,7 @@ public class ListResponsesCommand extends Command{
 			try {
 				handler.getBot().getServerConfig().loadConfig(channel.getGuild().getIdLong());
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to load server config in list responses command", e);
 				channel.sendMessage("Error: Failed to load database!").queue();
 				return;
 			}

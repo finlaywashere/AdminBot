@@ -21,7 +21,7 @@ import xyz.finlaym.adminbot.action.message.command.commands.admin.SetFlagCommand
 import xyz.finlaym.adminbot.action.message.command.commands.admin.SetLoggingChannelCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.currency.GetBalanceCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.currency.SetBalanceCommand;
-import xyz.finlaym.adminbot.action.message.command.commands.currency.SetCurrencySuffix;
+import xyz.finlaym.adminbot.action.message.command.commands.currency.SetCurrencySuffixCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.AddPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.ListPermissionsCommand;
@@ -81,7 +81,7 @@ public class CommandHandler {
 		this.commands.add(new SetLoggingChannelCommand());
 		this.commands.add(new GetBalanceCommand());
 		this.commands.add(new SetBalanceCommand());
-		this.commands.add(new SetCurrencySuffix());
+		this.commands.add(new SetCurrencySuffixCommand());
 	}
 	public Bot getBot() {
 		return bot;

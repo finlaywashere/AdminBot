@@ -32,7 +32,9 @@ public class Bot extends ListenerAdapter {
 		try {
 			PropertyConfigurator.configure(new FileInputStream(new File("log4j.properties")));
 		} catch (FileNotFoundException e) {
+			// Cannot replace this with a logger.error as it is the code that configures the logger
 			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 	

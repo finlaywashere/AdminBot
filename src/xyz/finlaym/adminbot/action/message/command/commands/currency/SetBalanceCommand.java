@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.currency;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -10,6 +13,8 @@ import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class SetBalanceCommand extends Command{
+
+	private static final Logger logger = LoggerFactory.getLogger(SetBalanceCommand.class);
 
 	public SetBalanceCommand() {
 		super("setbalance", "command.setbalance", "-setbalance <user tag> <amount>", "Sets a user's balance", ServerConfig.CURRENCY_FLAG);
@@ -34,7 +39,7 @@ public class SetBalanceCommand extends Command{
 		try {
 			cConfig.saveCurrency(gid, id);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to save currency config in set balance command", e);
 			channel.sendMessage("Critical Error: Failed to save balance to database!").queue();
 			return;
 		}

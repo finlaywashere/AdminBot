@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.admin;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -9,6 +12,8 @@ import xyz.finlaym.adminbot.storage.config.ServerConfig;
 
 public class SetLoggingChannelCommand extends Command{
 
+	private static final Logger logger = LoggerFactory.getLogger(SetLoggingChannelCommand.class);
+	
 	public SetLoggingChannelCommand() {
 		super("setloggingchannel", "command.setloggingchannel", "-setloggingchannel <tag channel>", "Sets the server's logging channel");
 	}
@@ -26,7 +31,7 @@ public class SetLoggingChannelCommand extends Command{
 		try {
 			sConfig.saveConfig(channel.getGuild().getIdLong());
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to save server config in set logging channel command", e);
 			channel.sendMessage("Critical Error: Failed to save flags!").queue();
 			return;
 		}

@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.currency;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -7,9 +10,11 @@ import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 
-public class SetCurrencySuffix extends Command{
+public class SetCurrencySuffixCommand extends Command{
 
-	public SetCurrencySuffix() {
+	private static final Logger logger = LoggerFactory.getLogger(SetCurrencySuffixCommand.class);
+	
+	public SetCurrencySuffixCommand() {
 		super("setcurrencysuffix", "command.setcurrencysuffix", "-setcurrencysuffix <$,etc>", "Sets what currency is used by this guild", ServerConfig.CURRENCY_FLAG);
 	}
 
@@ -33,7 +38,7 @@ public class SetCurrencySuffix extends Command{
 		try {
 			sConfig.saveConfig(gid);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to save server config in set currency suffix command", e);
 			channel.sendMessage("Critical Error: Failed to save currency suffix to database!").queue();
 			return;
 		}

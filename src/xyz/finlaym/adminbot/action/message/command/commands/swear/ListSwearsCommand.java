@@ -2,6 +2,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.swear;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -11,6 +14,8 @@ import xyz.finlaym.adminbot.action.message.swear.SwearWord;
 
 public class ListSwearsCommand extends Command{
 
+	private static final Logger logger = LoggerFactory.getLogger(ListSwearsCommand.class);
+	
 	public ListSwearsCommand() {
 		super("listswears", "command.listswears", "-listswears", "Displays all of the blacklisted words on this guild");
 	}
@@ -23,7 +28,7 @@ public class ListSwearsCommand extends Command{
 			try {
 				handler.getBot().getSwearsConfig().loadSwears(channel.getGuild().getIdLong());
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to load server config in list swears command", e);
 				channel.sendMessage("Error loading swear words from database!").queue();
 				return;
 			}

@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.admin;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -9,6 +12,8 @@ import xyz.finlaym.adminbot.storage.config.ServerConfig;
 
 public class SetFlagCommand extends Command{
 
+	private static final Logger logger = LoggerFactory.getLogger(SetFlagCommand.class);
+	
 	public SetFlagCommand() {
 		super("setflag", "command.setflag", "-setflag <name> <on/off>", "Turns on a feature for this server");
 	}
@@ -32,8 +37,8 @@ public class SetFlagCommand extends Command{
 		ServerConfig sConfig = handler.getBot().getServerConfig();
 		try {
 			sConfig.loadConfig(channel.getGuild().getIdLong());
-		} catch (Exception e1) {
-			e1.printStackTrace();
+		} catch (Exception e) {
+			logger.error("Failed to load server config in set flag command", e);
 			channel.sendMessage("Critical Error: Failed to save flags!").queue();
 			return;
 		}
@@ -54,7 +59,7 @@ public class SetFlagCommand extends Command{
 		try {
 			sConfig.saveConfig(channel.getGuild().getIdLong());
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Failed to save server config in set flag command", e);
 			channel.sendMessage("Critical Error: Failed to save flags!").queue();
 			return;
 		}

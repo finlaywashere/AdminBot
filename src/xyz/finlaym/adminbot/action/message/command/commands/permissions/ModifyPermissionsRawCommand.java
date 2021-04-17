@@ -1,5 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.permissions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -13,6 +16,8 @@ import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class ModifyPermissionsRawCommand extends Command {
 
+	private static final Logger logger = LoggerFactory.getLogger(ModifyPermissionsRawCommand.class);
+	
 	public ModifyPermissionsRawCommand() {
 		super("modifypermission", "command.modifypermission", "-modifypermission <action> <id type> <id> <permission>", "Modify raw permission values for a user/group");
 	}
@@ -46,14 +51,18 @@ public class ModifyPermissionsRawCommand extends Command {
 				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
 					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);
 				}
-			} catch (Exception e1) {
-				e1.printStackTrace();
+			} catch (Exception e) {
+				logger.error("Failed to load permissions in modify permissions raw command", e);
+				channel.sendMessage("Critical Error: Failed to load permissions!").queue();
+				return;
 			}
 			pConfig.addGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[4]));
 			try {
 				pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to save permissions in modify permissions raw command", e);
+				channel.sendMessage("Critical Error: Failed to save permissions!").queue();
+				return;
 			}
 			break;
 		case "remove":
@@ -61,14 +70,18 @@ public class ModifyPermissionsRawCommand extends Command {
 				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
 					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);
 				}
-			} catch (Exception e1) {
-				e1.printStackTrace();
+			} catch (Exception e) {
+				logger.error("Failed to load permissions in modify permissions raw command", e);
+				channel.sendMessage("Critical Error: Failed to load permissions!").queue();
+				return;
 			}
 			pConfig.removeGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[4]));
 			try {
 				pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Failed to save permissions in modify permissions raw command", e);
+				channel.sendMessage("Critical Error: Failed to save permissions!").queue();
+				return;
 			}
 			break;
 		default:

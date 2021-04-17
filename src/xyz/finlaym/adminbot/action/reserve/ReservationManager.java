@@ -3,6 +3,9 @@ package xyz.finlaym.adminbot.action.reserve;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.PermissionOverride;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -14,6 +17,8 @@ import net.dv8tion.jda.api.managers.ChannelManager;
 import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 
 public class ReservationManager extends ListenerAdapter{
+	
+	private static final Logger logger = LoggerFactory.getLogger(ReservationManager.class);
 	
 	private ReservationConfig rConfig;
 	public ReservationManager(ReservationConfig rConfig) {
@@ -28,7 +33,7 @@ public class ReservationManager extends ListenerAdapter{
 			try {
 				removeReservation(vc);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error in removing reservation", e);
 			}
 		}
 	}
