@@ -44,7 +44,7 @@ public class SetFlagCommand extends Command{
 			newValue |= bit;
 			break;
 		case "off":
-			
+			newValue &= ~bit;
 			break;
 		default:
 			channel.sendMessage("Usage: "+usage).queue();

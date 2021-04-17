@@ -28,6 +28,8 @@ public class ServerConfig {
 	
 	private Map<Long,TextChannel> loggingChannels;
 	
+	private Map<Long,String> currencies;
+	
 	private DBInterface dbInterface;
 	private Bot bot;
 	
@@ -35,6 +37,7 @@ public class ServerConfig {
 		this.flags = new HashMap<Long,Long>();
 		this.responses = new HashMap<Long,List<CustomResponse>>();
 		this.loggingChannels = new HashMap<Long,TextChannel>();
+		this.currencies = new HashMap<Long,String>();
 		this.dbInterface = dbInterface;
 		this.bot = bot;
 	}
@@ -65,5 +68,12 @@ public class ServerConfig {
 		if(id != 0)
 			loggingChannels.put(gid, bot.getJDA().getTextChannelById(id));
 	}
-	
+	public String getCurrencySuffix(long gid) {
+		if(currencies.get(gid) == null)
+			return "$";
+		return currencies.get(gid);
+	}
+	public void setCurrencySuffix(long gid, String suffix) {
+		currencies.put(gid, suffix);
+	}
 }

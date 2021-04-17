@@ -19,6 +19,9 @@ import xyz.finlaym.adminbot.action.message.command.commands.admin.RemoveReservat
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RolesMenuCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.SetFlagCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.SetLoggingChannelCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.currency.GetBalanceCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.currency.SetBalanceCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.currency.SetCurrencySuffix;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.AddPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.ListPermissionsCommand;
@@ -76,6 +79,9 @@ public class CommandHandler {
 		this.commands.add(new SetFlagCommand());
 		this.commands.add(new GetFlagsCommand());
 		this.commands.add(new SetLoggingChannelCommand());
+		this.commands.add(new GetBalanceCommand());
+		this.commands.add(new SetBalanceCommand());
+		this.commands.add(new SetCurrencySuffix());
 	}
 	public Bot getBot() {
 		return bot;
@@ -97,15 +103,25 @@ public class CommandHandler {
 		for(Command c : commands) {
 			if(command[0].equalsIgnoreCase(c.getName())) {
 				if(pConfig.checkPermission(channel.getGuild(), member, c.getPermission())) {
-					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
-					c.execute(member, channel, command, this, message, silenced);
+					long requiredFlags = c.getRequiredFlags();
+					if(requiredFlags == -1 || checkFlags(requiredFlags, bot.getServerConfig().getFlags(channel.getGuild().getIdLong()))) {
+						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
+						c.execute(member, channel, command, this, message, silenced);
+					}else {
+						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "tried to execute disabled command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
+						channel.sendMessage("Error: That command is not enabled on this server!").queue();
+					}
 					return;
 				}else {
-					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "tried to execute command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
+					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "tried to execute command with insufficient permissions\""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
 					channel.sendMessage("Error: Insufficient permissions to execute command!").queue();
 					return;
 				}
 			}
 		}
+	}
+	private boolean checkFlags(long actual, long expected) {
+		long and = actual & expected;
+		return and > 0;
 	}
 }

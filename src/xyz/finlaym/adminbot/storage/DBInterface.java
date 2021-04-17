@@ -59,6 +59,7 @@ public class DBInterface {
 				sConfig.setFlags(rs.getLong("id"),rs.getLong("flags"));
 				sConfig.setResponses(rs.getLong("id"), CustomResponse.fromString(rs.getString("customResponses")));
 				sConfig.setLoggingChannel(rs.getLong("id"), rs.getLong("logging_channel"));
+				sConfig.setCurrencySuffix(rs.getLong("id"), rs.getString("currency_suffix"));
 			}catch(SQLException e) {
 				logger.debug("SQL exception encountered, likely null row");
 				logger.trace("SQL exception encountered, likely null row", e);
@@ -84,18 +85,20 @@ public class DBInterface {
 			if(responses.length() > 0)
 				responses = responses.substring(1);
 			if(rs.getRow() == 0) {
-				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `flags`, `customResponses`, `logging_channel`) VALUES(?,?,?,?);");
+				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `flags`, `customResponses`, `logging_channel`, `currency_suffix`) VALUES(?,?,?,?,?);");
 				pS.setLong(1, id);
 				pS.setLong(2, sConfig.getFlags(id));
 				pS.setString(3, responses);
 				pS.setLong(4, sConfig.getLoggingChannel(id).getIdLong());
+				pS.setString(5, sConfig.getCurrencySuffix(id));
 				pS.executeUpdate();
 			}else {
-				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ?, `logging_channel` = ? WHERE `id` = ?");
-				pS.setLong(4, id);
+				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ?, `logging_channel` = ?, `currency_suffix` = ? WHERE `id` = ?");
+				pS.setLong(5, id);
 				pS.setLong(1, sConfig.getFlags(id));
 				pS.setString(2, responses);
 				pS.setLong(3, sConfig.getLoggingChannel(id).getIdLong());
+				pS.setString(4, sConfig.getCurrencySuffix(id));
 				pS.executeUpdate();
 			}
 		}catch(Exception e) {
