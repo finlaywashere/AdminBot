@@ -18,10 +18,21 @@ public class HelpCommand extends Command{
 	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		List<Command> commands = handler.getCommands();
 		String help = "Command usage: ";
+		String oldHelp = help;
 		for(Command c : commands) {
 			help += "\n-"+c.getName()+" : "+c.getDescription()+" : "+c.getUsage();
+			String[] split = help.split("&t");
+			if(split[split.length-1].length() >= 2000) {
+				String diff = help.substring(oldHelp.length());
+				help = oldHelp;
+				help += "&t";
+				help += diff;
+			}
+			oldHelp = help;
 		}
-		channel.sendMessage(help).queue();
+		for(String s : help.split("&t")) {
+			channel.sendMessage(s).queue();
+		}
 		if(silence)
 			message.delete().queue();
 	}
