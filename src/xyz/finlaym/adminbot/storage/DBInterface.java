@@ -21,11 +21,13 @@ import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
 import xyz.finlaym.adminbot.action.reserve.PermissionState;
 import xyz.finlaym.adminbot.action.reserve.ReservationState;
+import xyz.finlaym.adminbot.action.timer.TimedEvent;
 import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
+import xyz.finlaym.adminbot.storage.config.TimedEventConfig;
 
 public class DBInterface {
 	
@@ -350,6 +352,66 @@ public class DBInterface {
 			try {
 				fixConnection();
 			}catch(Exception e1) {
+				logger.error("Failed to fix database connection", e1);
+			}
+		}
+	}
+	public void loadEvents(TimedEventConfig eConfig) {
+		try {
+			Statement statement = conn.createStatement();
+			ResultSet rs = statement.executeQuery("SELECT * FROM `events` WHERE 1;");
+			List<TimedEvent> events = new ArrayList<TimedEvent>();
+			while(rs.next()) {
+				TimedEvent e = new TimedEvent(rs.getLong("uid"), rs.getLong("gid"), rs.getDate("run_date").getTime(), rs.getLong("repeat_interval"), rs.getLong("repeat_count"), rs.getLong("type"), rs.getString("extra"));
+				events.add(e);
+			}
+			eConfig.setEvents(events);
+		}catch(Exception e) {
+			logger.error("Error reported! Attempting to recover", e);
+			try {
+				fixConnection();
+			} catch (Exception e1) {
+				logger.error("Failed to fix database connection", e1);
+			}
+		}
+	}
+	public void addEvent(TimedEventConfig eConfig, TimedEvent event) {
+		try {
+			PreparedStatement statement = conn.prepareStatement("INSERT INTO `events`  (`run_date`, `repeat_interval`, `repeat_count`, `type`, `gid`, `uid`, `extra`) VALUES (?,?,?,?,?,?,?);");
+			Date date = new Date(event.getRunDate());
+			statement.setDate(1, date);
+			statement.setLong(2, event.getRepeatInterval());
+			statement.setLong(3, event.getRepeatCount());
+			statement.setLong(4, event.getType());
+			statement.setLong(5, event.getGid());
+			statement.setLong(6, event.getUid());
+			statement.setString(7, event.getExtra());
+			statement.executeUpdate();
+		}catch(Exception e) {
+			logger.error("Error reported! Attempting to recover", e);
+			try {
+				fixConnection();
+			} catch (Exception e1) {
+				logger.error("Failed to fix database connection", e1);
+			}
+		}
+	}
+	public void removeEvent(TimedEventConfig eConfig, TimedEvent event) {
+		try {
+			PreparedStatement statement = conn.prepareStatement("DELETE FROM `events`  WHERE `gid`=?, `uid`=?, `type`=?, `run_date`=?, `extra`=?;");
+			
+			statement.setLong(1, event.getGid());
+			statement.setLong(2, event.getUid());
+			Date date = new Date(event.getRunDate());
+			statement.setDate(4, date);
+			statement.setLong(3, event.getType());
+			statement.setString(5, event.getExtra());
+			statement.executeUpdate();
+		}catch(Exception e) {
+			logger.error("Error reported! Attempting to recover", e);
+			try {
+				fixConnection();
+			} catch (Exception e1) {
 				logger.error("Failed to fix database connection", e1);
 			}
 		}

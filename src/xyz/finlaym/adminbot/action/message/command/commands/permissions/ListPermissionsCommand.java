@@ -36,7 +36,7 @@ public class ListPermissionsCommand extends Command{
 					List<Permission> perms = pConfig.getEffectivePermissions(channel.getGuild(), member);
 					
 					String s = "User is admin: "+pConfig.hasAdmin(member)+"\nPermissions:\n```";
-					if(perms != null) {
+					if(perms != null && perms.size() > 0) {
 						for(Permission p : perms) {
 							s += "\n"+p;
 						}
@@ -60,7 +60,7 @@ public class ListPermissionsCommand extends Command{
 					if(pConfig.checkPermission(channel.getGuild(), member, "permission.view.others.role."+id)) {
 						List<Permission> perms = pConfig.getGroupPerms(channel.getGuild().getIdLong(), new GroupIdentifier(Group.TYPE_ROLE, id));
 						String s = "Role has admin: "+pConfig.hasAdmin(message.getMentionedRoles().get(0))+"\nPermissions:\n```";
-						if(perms != null) {
+						if(perms != null && perms.size() > 0) {
 							for(Permission p : perms) {
 								s += "\n"+p;
 							}
@@ -83,7 +83,7 @@ public class ListPermissionsCommand extends Command{
 					if(pConfig.checkPermission(channel.getGuild(), member, "permission.view.others.user."+id)) {
 						List<Permission> perms = pConfig.getEffectivePermissions(channel.getGuild(), message.getMentionedMembers().get(0));
 						String s = "User is admin: "+pConfig.hasAdmin(message.getMentionedMembers().get(0))+"\nPermissions:\n```";
-						if(perms != null) {
+						if(perms != null && perms.size() > 0) {
 							for(Permission p : perms) {
 								s += "\n"+p;
 							}

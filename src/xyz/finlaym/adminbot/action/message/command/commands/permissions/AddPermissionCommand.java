@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
@@ -25,9 +24,12 @@ public class AddPermissionCommand extends Command{
 	@Override
 	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
 		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
-		if(message.getMentionedRoles().size() == 1) {
-			Role r = message.getMentionedRoles().get(0);
-			GroupIdentifier identifier = new GroupIdentifier(Group.TYPE_ROLE, r.getIdLong());
+		if(message.getMentionedRoles().size() == 1 || message.mentionsEveryone()) {
+			GroupIdentifier identifier;
+			if(!message.mentionsEveryone())
+				identifier = new GroupIdentifier(Group.TYPE_ROLE, message.getMentionedRoles().get(0).getIdLong());
+			else
+				identifier = new GroupIdentifier(Group.TYPE_ROLE, 0);
 			try {
 				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
 					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);

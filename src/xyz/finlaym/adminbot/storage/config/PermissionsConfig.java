@@ -90,6 +90,9 @@ public class PermissionsConfig {
 		List<Permission> u = getGroupPerms(guild.getIdLong(),new GroupIdentifier(Group.TYPE_USER, user.getIdLong()));
 		if(u != null)
 			perms.addAll(u);
+		List<Permission> everyone = getGroupPerms(guild.getIdLong(), new GroupIdentifier(Group.TYPE_ROLE, 0));
+		if(everyone != null)
+			perms.addAll(everyone);
 		Map<GroupIdentifier, List<Permission>> permsMap = groupPerms.get(guild.getIdLong());
 		for(Role r : user.getRoles()) {
 			GroupIdentifier identifier = new GroupIdentifier(Group.TYPE_ROLE,r.getIdLong());

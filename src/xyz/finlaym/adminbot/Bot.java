@@ -18,13 +18,15 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import xyz.finlaym.adminbot.action.message.MessageListener;
 import xyz.finlaym.adminbot.action.reaction.ReactionListener;
 import xyz.finlaym.adminbot.action.reserve.ReservationManager;
+import xyz.finlaym.adminbot.action.timer.TimedEventManager;
 import xyz.finlaym.adminbot.storage.DBInterface;
+import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ReservationConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SessionConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
-import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
+import xyz.finlaym.adminbot.storage.config.TimedEventConfig;
 
 public class Bot extends ListenerAdapter {
 
@@ -51,6 +53,7 @@ public class Bot extends ListenerAdapter {
 	private ReservationManager rManager;
 	private SessionConfig sessionConfig;
 	private ReservationConfig rConfig;
+	private TimedEventManager eManager;
 	
 	private JDA jda;
 	
@@ -75,7 +78,10 @@ public class Bot extends ListenerAdapter {
 		cConfig = new CurrencyConfig(dbInterface);
 		seConfig = new ServerConfig(dbInterface, this);
 		pConfig = new PermissionsConfig(dbInterface);
+		TimedEventConfig eConfig= new TimedEventConfig(dbInterface);
+		this.eManager = new TimedEventManager(eConfig);
 		sessionConfig = new SessionConfig();
+		
 		logger.info("Finished startup!");
 	}
 
@@ -103,5 +109,7 @@ public class Bot extends ListenerAdapter {
 	public DBInterface getDBInterface() {
 		return dbInterface;
 	}
-	
+	public TimedEventManager getEventManager() {
+		return eManager;
+	}
 }
