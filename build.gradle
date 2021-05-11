@@ -8,7 +8,11 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.1.0'
 }
 repositories {
-	jcenter()
+	mavenCentral()
+	maven {
+		name 'm2-dv8tion'
+		url 'https://m2.dv8tion.net/releases'
+	}
 }
 sourceSets{
 	main{
@@ -18,7 +22,7 @@ sourceSets{
 	}
 }
 dependencies {
-	compile 'net.dv8tion:JDA:4.2.0_227'
+	compile 'net.dv8tion:JDA:4.2.1_253'
 	compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
 	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
 	compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '2.0.0-alpha1'
