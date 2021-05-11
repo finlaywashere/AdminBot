@@ -16,7 +16,7 @@ public class TimedEventManager extends Thread{
 	private List<TimedEventCallback> callbacks = new ArrayList<TimedEventCallback>();
 	public TimedEventManager(TimedEventConfig eConfig) {
 		this.eConfig = eConfig;
-		run();
+		start();
 	}
 	@Override
 	public void run() {

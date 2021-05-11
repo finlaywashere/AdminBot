@@ -68,19 +68,21 @@ public class Bot extends ListenerAdapter {
 		dbInterface.init("adminbot", dbUser, dbPass);
 		rConfig = new ReservationConfig(dbInterface,this);
 		rManager = new ReservationManager(rConfig);
+		sConfig = new SwearsConfig(dbInterface);
+		cConfig = new CurrencyConfig(dbInterface);
+		seConfig = new ServerConfig(dbInterface, this);
+		pConfig = new PermissionsConfig(dbInterface);
+		sessionConfig = new SessionConfig();
+		
+		TimedEventConfig eConfig= new TimedEventConfig(dbInterface);
+		eManager = new TimedEventManager(eConfig);
+		
 		jda = JDABuilder.createDefault(token).addEventListeners(new MessageListener(this), new ReactionListener(), rManager).
 				setAutoReconnect(true).setActivity(Activity.watching("you")).
 				enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES).
 				setChunkingFilter(ChunkingFilter.NONE).
 				setMemberCachePolicy(MemberCachePolicy.ALL).build().awaitReady();
 		rConfig.prune(rManager,jda);
-		sConfig = new SwearsConfig(dbInterface);
-		cConfig = new CurrencyConfig(dbInterface);
-		seConfig = new ServerConfig(dbInterface, this);
-		pConfig = new PermissionsConfig(dbInterface);
-		TimedEventConfig eConfig= new TimedEventConfig(dbInterface);
-		this.eManager = new TimedEventManager(eConfig);
-		sessionConfig = new SessionConfig();
 		
 		logger.info("Finished startup!");
 	}
