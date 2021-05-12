@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.Bot;
+import xyz.finlaym.adminbot.action.alias.AliasTranslator;
 import xyz.finlaym.adminbot.action.message.command.commands.EchoCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.HelpCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.ReserveChannelCommand;
@@ -19,6 +20,9 @@ import xyz.finlaym.adminbot.action.message.command.commands.admin.RemoveReservat
 import xyz.finlaym.adminbot.action.message.command.commands.admin.RolesMenuCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.SetFlagCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.admin.SetLoggingChannelCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.alias.DeleteAliasCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.alias.ListAliasesCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.alias.SetAliasCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.currency.GetBalanceCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.currency.SetBalanceCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.currency.SetCurrencySuffixCommand;
@@ -48,10 +52,12 @@ public class CommandHandler {
 	private Bot bot;
 	private List<Command> commands;
 	private SessionHandler sessionHandler;
+	private AliasTranslator aliasTranslator;
 
 	public CommandHandler(Bot bot) {
 		this.bot = bot;
 		this.sessionHandler = new SessionHandler(this);
+		this.aliasTranslator = new AliasTranslator(bot.getServerConfig());
 		this.commands = new ArrayList<Command>();
 		
 		this.commands.add(new HelpCommand());
@@ -82,6 +88,9 @@ public class CommandHandler {
 		this.commands.add(new GetBalanceCommand());
 		this.commands.add(new SetBalanceCommand());
 		this.commands.add(new SetCurrencySuffixCommand());
+		this.commands.add(new SetAliasCommand());
+		this.commands.add(new ListAliasesCommand());
+		this.commands.add(new DeleteAliasCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -89,7 +98,13 @@ public class CommandHandler {
 	public List<Command> getCommands() {
 		return commands;
 	}
-	public void handleCommand(Member member, TextChannel channel, String[] command, Message message) throws Exception {
+	public void handleCommand(Member member, TextChannel channel, Message message) throws Exception {
+		long gid = channel.getGuild().getIdLong();
+		String prefix = this.bot.getServerConfig().getPrefix(gid);
+		if(!message.getContentRaw().startsWith(prefix))
+			return;
+		
+		String[] command = message.getContentRaw().substring(prefix.length()).trim().split(" ");
 		if(command.length == 0)
 			return;
 		boolean silenced = false;
@@ -97,23 +112,29 @@ public class CommandHandler {
 			command[0] = command[0].substring(1);
 			silenced = true;
 		}
-		// Handle command before permission checks to ensure theres no way to bypass them
+		// Handle command before permission checks to ensure there is no way to bypass them
+		// This replaces variables, etc in the command with environment variables and this could be used to circumvent permission checks
+		// If it is run after the checks
 		sessionHandler.handleCommand(member, channel, message, command, silenced);
+		// Also handle aliases here so that they can't break permission checks
+		command[0] = aliasTranslator.applyAliases(command[0],gid,channel);
+		if(command[0] == null)
+			return;
 		PermissionsConfig pConfig = bot.getPermissionsConfig();
 		for(Command c : commands) {
 			if(command[0].equalsIgnoreCase(c.getName())) {
 				if(pConfig.checkPermission(channel.getGuild(), member, c.getPermission())) {
 					long requiredFlags = c.getRequiredFlags();
-					if(requiredFlags == -1 || checkFlags(requiredFlags, bot.getServerConfig().getFlags(channel.getGuild().getIdLong()))) {
-						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
+					if(requiredFlags == -1 || checkFlags(requiredFlags, bot.getServerConfig().getFlags(gid))) {
+						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "successfully executed command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
 						c.execute(member, channel, command, this, message, silenced);
 					}else {
-						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "tried to execute disabled command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
+						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "tried to execute disabled command \""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
 						channel.sendMessage("Error: That command is not enabled on this server!").queue();
 					}
 					return;
 				}else {
-					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(channel.getGuild().getIdLong()), member.getUser(), "tried to execute command with insufficient permissions\""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
+					LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "tried to execute command with insufficient permissions\""+message.getContentRaw()+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
 					channel.sendMessage("Error: Insufficient permissions to execute command!").queue();
 					return;
 				}

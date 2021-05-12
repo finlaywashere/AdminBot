@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.Bot;
+import xyz.finlaym.adminbot.action.alias.Alias;
 import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 import xyz.finlaym.adminbot.action.message.swear.SwearWord;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
@@ -63,6 +64,8 @@ public class DBInterface {
 				sConfig.setResponses(rs.getLong("id"), CustomResponse.fromString(rs.getString("customResponses")));
 				sConfig.setLoggingChannel(rs.getLong("id"), rs.getLong("logging_channel"));
 				sConfig.setCurrencySuffix(rs.getLong("id"), rs.getString("currency_suffix"));
+				sConfig.setPrefix(rs.getLong("id"), rs.getString("command_prefix"));
+				sConfig.setAliases(rs.getLong("id"), Alias.valueOf(rs.getString("aliases")));
 			}catch(SQLException e) {
 				logger.debug("SQL exception encountered, likely null row");
 				logger.trace("SQL exception encountered, likely null row", e);
@@ -86,25 +89,37 @@ public class DBInterface {
 			}
 			if(responses.length() > 0)
 				responses = responses.substring(1);
+			String aliases = "";
+			if(sConfig.getAliases(id) != null) {
+				for(Alias a : sConfig.getAliases(id)) {
+					aliases += ":"+a.toString();
+				}
+			}
+			if(aliases.length() > 0)
+				aliases = aliases.substring(1);
 			long loggingChannel = 0;
 			TextChannel channel = sConfig.getLoggingChannel(id);
 			if(channel != null)
 				loggingChannel = channel.getIdLong();
 			if(rs.getRow() == 0) {
-				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `flags`, `customResponses`, `logging_channel`, `currency_suffix`) VALUES(?,?,?,?,?);");
+				PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_config` (`id`, `flags`, `customResponses`, `logging_channel`, `currency_suffix`, `command_prefix`, `aliases`) VALUES(?,?,?,?,?,?,?);");
 				pS.setLong(1, id);
 				pS.setLong(2, sConfig.getFlags(id));
 				pS.setString(3, responses);
 				pS.setLong(4, loggingChannel);
 				pS.setString(5, sConfig.getCurrencySuffix(id));
+				pS.setString(6, sConfig.getPrefix(id));
+				pS.setString(7, aliases);
 				pS.executeUpdate();
 			}else {
-				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ?, `logging_channel` = ?, `currency_suffix` = ? WHERE `id` = ?");
-				pS.setLong(5, id);
+				PreparedStatement pS = conn.prepareStatement("UPDATE `server_config` SET `flags` = ?, `customResponses` = ?, `logging_channel` = ?, `currency_suffix` = ?, `command_prefix` = ?, `aliases` = ? WHERE `id` = ?");
+				pS.setLong(7, id);
 				pS.setLong(1, sConfig.getFlags(id));
 				pS.setString(2, responses);
 				pS.setLong(3, loggingChannel);
 				pS.setString(4, sConfig.getCurrencySuffix(id));
+				pS.setString(5, sConfig.getPrefix(id));
+				pS.setString(6, aliases);
 				pS.executeUpdate();
 			}
 		}catch(Exception e) {

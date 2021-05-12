@@ -78,9 +78,7 @@ public class MessageListener extends ListenerAdapter{
 				LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "said a swear word in channel "+channel.getAsMention()+", contents: \""+message.getContentRaw()+"\"",bot.getDBInterface());
 			}
 		}
-		if(message.getContentRaw().startsWith("-")) {
-			// Command call
-			cHandler.handleCommand(member,channel,message.getContentRaw().substring(1).trim().split(" "),message);
-		}
+		// Command call
+		cHandler.handleCommand(member,channel,message);
 	}
 }

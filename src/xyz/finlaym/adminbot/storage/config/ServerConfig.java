@@ -6,6 +6,7 @@ import java.util.Map;
 
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.Bot;
+import xyz.finlaym.adminbot.action.alias.Alias;
 import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 import xyz.finlaym.adminbot.storage.DBInterface;
 
@@ -29,6 +30,8 @@ public class ServerConfig {
 	private Map<Long,TextChannel> loggingChannels;
 	
 	private Map<Long,String> currencies;
+	private Map<Long,List<Alias>> aliases;
+	private Map<Long,String> prefixes;
 	
 	private DBInterface dbInterface;
 	private Bot bot;
@@ -38,6 +41,8 @@ public class ServerConfig {
 		this.responses = new HashMap<Long,List<CustomResponse>>();
 		this.loggingChannels = new HashMap<Long,TextChannel>();
 		this.currencies = new HashMap<Long,String>();
+		this.aliases = new HashMap<Long,List<Alias>>();
+		this.prefixes = new HashMap<Long,String>();
 		this.dbInterface = dbInterface;
 		this.bot = bot;
 	}
@@ -75,5 +80,21 @@ public class ServerConfig {
 	}
 	public void setCurrencySuffix(long gid, String suffix) {
 		currencies.put(gid, suffix);
+	}
+	public String getPrefix(long gid) {
+		String prefix = prefixes.get(gid);
+		if(prefix == null || prefix.length() == 0) {
+			prefix = "-";
+		}
+		return prefix;
+	}
+	public void setPrefix(long gid, String prefix) {
+		this.prefixes.put(gid, prefix);
+	}
+	public List<Alias> getAliases(long gid){
+		return aliases.get(gid);
+	}
+	public void setAliases(long gid, List<Alias> aliases) {
+		this.aliases.put(gid, aliases);
 	}
 }
