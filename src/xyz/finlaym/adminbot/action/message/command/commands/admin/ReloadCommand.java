@@ -3,11 +3,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.admin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
 
 public class ReloadCommand extends Command{
@@ -20,19 +18,16 @@ public class ReloadCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		SwearsConfig sConfig = handler.getBot().getSwearsConfig();
+	public CommandResponse execute(CommandInfo info) {
+		SwearsConfig sConfig = info.getHandler().getBot().getSwearsConfig();
 		try {
-			sConfig.loadSwears(channel.getGuild().getIdLong());
+			sConfig.loadSwears(info.getGid());
 		} catch (Exception e) {
 			logger.error("Error reloading server info",e);
-			channel.sendMessage("Failed to reload server info").queue();
-			return;
+			return new CommandResponse("Failed to reload server info",true);
 		}
-		if(!silence)
-			channel.sendMessage("Reloaded server info!").queue();
-		if(silence)
-			message.delete().queue();
+		
+		return new CommandResponse("Reloaded server info!");
 	}
 
 }

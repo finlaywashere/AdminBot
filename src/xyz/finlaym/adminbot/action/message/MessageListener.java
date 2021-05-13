@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
@@ -49,6 +50,15 @@ public class MessageListener extends ListenerAdapter{
 			handleMessage(event.getTextChannel(), event.getMember(), event.getMessage());
 		} catch (Exception e) {
 			logger.error("Failed to handle message updated in message listener", e);
+		}
+	}
+	@Override
+	public void onPrivateMessageReceived(PrivateMessageReceivedEvent event) {
+		try {
+			//TODO: Implement some commands in private messages
+			cHandler.handleRestrictedCommand(event.getAuthor(), event.getChannel(), event.getMessage());
+		} catch (Exception e) {
+			logger.error("Failed to handle private message received in message listener");
 		}
 	}
 	private void handleMessage(TextChannel channel, Member member, Message message) throws Exception {

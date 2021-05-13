@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.permission.Group;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
@@ -22,44 +22,43 @@ public class AddPermissionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		CommandHandler handler = info.getHandler();
+		String[] command = info.getCommand();
 		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
-		if(message.getMentionedRoles().size() == 1 || message.mentionsEveryone()) {
+		if(info.getRoleMentions().size() == 1 || info.mentionsEveryone()) {
 			GroupIdentifier identifier;
-			if(!message.mentionsEveryone())
-				identifier = new GroupIdentifier(Group.TYPE_ROLE, message.getMentionedRoles().get(0).getIdLong());
+			if(!info.mentionsEveryone())
+				identifier = new GroupIdentifier(Group.TYPE_ROLE, info.getRoleMentions().get(0).getIdLong());
 			else
 				identifier = new GroupIdentifier(Group.TYPE_ROLE, 0);
 			try {
-				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
-					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);
+				if(pConfig.getGroupPerms(info.getGid(), identifier) == null) {
+					pConfig.loadGroupPermissions(info.getGid(),identifier);
 				}
 			} catch (Exception e) {
 				logger.error("Failed to load permissions in add permission command", e);
-				channel.sendMessage("Critical Error: Failed to load permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to load permissions!",true);
 			}
 			for(int i = 2; i < command.length; i++) {
-				pConfig.addGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[i]));
+				pConfig.addGroupPermission(info.getGid(), identifier, new Permission(command[i]));
 			}
 			try {
-				pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
+				pConfig.saveGroupPermissions(info.getGid(), identifier);
 			} catch (Exception e) {
 				logger.error("Failed to save permissions in add permission command", e);
-				channel.sendMessage("Critical Error: Failed to save permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to save permissions!",true);
 			}
-		}else if(message.getMentionedMembers().size() == 1){
-			Member m = message.getMentionedMembers().get(0);
+		}else if(info.getMemberMentions().size() == 1){
+			Member m = info.getMemberMentions().get(0);
 			GroupIdentifier id = new GroupIdentifier(Group.TYPE_USER, m.getIdLong());
 			try {
-				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), id) == null) {
-					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),id);
+				if(pConfig.getGroupPerms(info.getGid(), id) == null) {
+					pConfig.loadGroupPermissions(info.getGid(),id);
 				}
 			} catch (Exception e) {
 				logger.error("Failed to load permissions in add permission command", e);
-				channel.sendMessage("Critical Error: Failed to load permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to load permissions!",true);
 			}
 			for(int i = 2; i < command.length; i++) {
 				pConfig.addGroupPermission(m.getGuild().getIdLong(), id, new Permission(command[i]));
@@ -68,16 +67,11 @@ public class AddPermissionCommand extends Command{
 				pConfig.saveGroupPermissions(m.getGuild().getIdLong(), id);
 			} catch (Exception e) {
 				logger.error("Failed to save permissions in add permission command", e);
-				channel.sendMessage("Critical Error: Failed to save permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to save permissions!", true);
 			}
 		}else {
-			channel.sendMessage("You must mention one role/user to give permissions to!").queue();
-			return;
+			return new CommandResponse("You must mention one role/user to give permissions to!",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully added permission(s) to users/roles!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully added permission(s) to users/roles!");
 	}
 }

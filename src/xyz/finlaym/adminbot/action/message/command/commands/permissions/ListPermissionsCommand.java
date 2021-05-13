@@ -5,11 +5,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.permission.Group;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
@@ -28,14 +27,16 @@ public class ListPermissionsCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		CommandHandler handler = info.getHandler();
+		String[] command = info.getCommand();
 		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
 		if(command.length == 1) {
 			try {
-				if(pConfig.checkPermission(channel.getGuild(), member, "permission.view.self")) {
-					List<Permission> perms = pConfig.getEffectivePermissions(channel.getGuild(), member);
+				if(pConfig.checkPermission(info.getGuild(), info.getSender(), "permission.view.self")) {
+					List<Permission> perms = pConfig.getEffectivePermissions(info.getGuild(), info.getSender());
 					
-					String s = "User is admin: "+pConfig.hasAdmin(member)+"\nPermissions:\n```";
+					String s = "User is admin: "+pConfig.hasAdmin(info.getSender())+"\nPermissions:\n```";
 					if(perms != null && perms.size() > 0) {
 						for(Permission p : perms) {
 							s += "\n"+p;
@@ -44,22 +45,21 @@ public class ListPermissionsCommand extends Command{
 						s += "\nNone";
 					}
 					s += "```";
-					channel.sendMessage(s).queue();
+					return new CommandResponse(s);
 				}else {
-					channel.sendMessage("Error: Insufficient permissions to view your permissions!").queue();
+					return new CommandResponse("Error: Insufficient permissions to view your permissions!",true);
 				}
 			} catch (Exception e) {
 				logger.error("Failed to check permissions in list permissions command", e);
-				channel.sendMessage("Critical Error: Failed to check permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to check permissions!",true);
 			}
 		}else {
-			if(message.getMentionedRoles().size() == 1) {
-				long id = message.getMentionedRoles().get(0).getIdLong();
+			if(info.getRoleMentions().size() == 1) {
+				long id = info.getRoleMentions().get(0).getIdLong();
 				try {
-					if(pConfig.checkPermission(channel.getGuild(), member, "permission.view.others.role."+id)) {
-						List<Permission> perms = pConfig.getGroupPerms(channel.getGuild().getIdLong(), new GroupIdentifier(Group.TYPE_ROLE, id));
-						String s = "Role has admin: "+pConfig.hasAdmin(message.getMentionedRoles().get(0))+"\nPermissions:\n```";
+					if(pConfig.checkPermission(info.getGuild(), info.getSender(), "permission.view.others.role."+id)) {
+						List<Permission> perms = pConfig.getGroupPerms(info.getGid(), new GroupIdentifier(Group.TYPE_ROLE, id));
+						String s = "Role has admin: "+pConfig.hasAdmin(info.getRoleMentions().get(0))+"\nPermissions:\n```";
 						if(perms != null && perms.size() > 0) {
 							for(Permission p : perms) {
 								s += "\n"+p;
@@ -68,21 +68,20 @@ public class ListPermissionsCommand extends Command{
 							s += "\nNone";
 						}
 						s += "```";
-						channel.sendMessage(s).queue();
+						return new CommandResponse(s,false,true);
 					}else {
-						channel.sendMessage("Error: Insufficient permissions to view role's permissions!").queue();
+						return new CommandResponse("Error: Insufficient permissions to view role's permissions!",true);
 					}
 				} catch (Exception e) {
 					logger.error("Failed to check permissions in list permissions command", e);
-					channel.sendMessage("Critical Error: Failed to check permissions!").queue();
-					return;
+					return new CommandResponse("Critical Error: Failed to check permissions!",true);
 				}
-			}else if(message.getMentionedMembers().size() == 1) {
-				long id = message.getMentionedMembers().get(0).getIdLong();
+			}else if(info.getMemberMentions().size() == 1) {
+				long id = info.getMemberMentions().get(0).getIdLong();
 				try {
-					if(pConfig.checkPermission(channel.getGuild(), member, "permission.view.others.user."+id)) {
-						List<Permission> perms = pConfig.getEffectivePermissions(channel.getGuild(), message.getMentionedMembers().get(0));
-						String s = "User is admin: "+pConfig.hasAdmin(message.getMentionedMembers().get(0))+"\nPermissions:\n```";
+					if(pConfig.checkPermission(info.getGuild(), info.getSender(), "permission.view.others.user."+id)) {
+						List<Permission> perms = pConfig.getEffectivePermissions(info.getGuild(), info.getMemberMentions().get(0));
+						String s = "User is admin: "+pConfig.hasAdmin(info.getMemberMentions().get(0))+"\nPermissions:\n```";
 						if(perms != null && perms.size() > 0) {
 							for(Permission p : perms) {
 								s += "\n"+p;
@@ -91,21 +90,17 @@ public class ListPermissionsCommand extends Command{
 							s += "\nNone";
 						}
 						s += "```";
-						channel.sendMessage(s).queue();
+						return new CommandResponse(s,false,true);
 					}else {
-						channel.sendMessage("Error: Insufficient permissions to view user's permissions!").queue();
+						return new CommandResponse("Error: Insufficient permissions to view user's permissions!",true);
 					}
 				} catch (Exception e) {
 					logger.error("Failed to check permissions in list permissions command", e);
-					channel.sendMessage("Critical Error: Failed to check permissions!").queue();
-					return;
+					return new CommandResponse("Critical Error: Failed to check permissions!",true);
 				}
 			}else {
-				channel.sendMessage("Usage: "+usage);
-				return;
+				return new CommandResponse("Usage: "+usage,true);
 			}
-			if(silence)
-				message.delete().queue();
 		}
 	}
 }

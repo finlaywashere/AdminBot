@@ -1,10 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 
 public class EchoCommand extends Command{
 
@@ -13,13 +11,12 @@ public class EchoCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
 		String text = "";
 		for(int i = 1; i < command.length; i++) {
 			text += command[i] + " ";
 		}
-		channel.sendMessage(text).queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse(text,false,true);
 	}
 }

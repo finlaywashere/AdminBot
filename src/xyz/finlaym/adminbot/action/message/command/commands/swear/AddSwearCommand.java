@@ -4,11 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.message.swear.SwearWord;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
 
@@ -21,8 +20,10 @@ public class AddSwearCommand extends Command {
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		Guild guild = channel.getGuild();
+	public CommandResponse execute(CommandInfo info) {
+		CommandHandler handler = info.getHandler();
+		String[] command = info.getCommand();
+		Guild guild = info.getGuild();
 		SwearsConfig sConfig = handler.getBot().getSwearsConfig();
 		for(int i = 1; i < command.length; i++) {
 			String swear = command[i];
@@ -31,13 +32,9 @@ public class AddSwearCommand extends Command {
 				sConfig.saveSwears(guild.getIdLong());
 			}catch(Exception e) {
 				logger.error("Failed to save swear word in add swear command", e);
-				channel.sendMessage("Critical Error: Failed to save swear words to database!");
-				return;
+				return new CommandResponse("Critical Error: Failed to save swear words to database!",true);
 			}
 		}
-		if(!silence)
-			channel.sendMessage("Successfully added swears to DB!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully added swears to DB!");
 	}
 }

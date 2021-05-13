@@ -1,13 +1,14 @@
 package xyz.finlaym.adminbot.action.message.command.commands.admin;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 
 public class SetLoggingChannelCommand extends Command{
@@ -19,25 +20,21 @@ public class SetLoggingChannelCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		if(message.getMentionedChannels().size() != 1) {
-			channel.sendMessage("Usage: "+usage).queue();
-			return;
+	public CommandResponse execute(CommandInfo info) {
+		List<TextChannel> mentions = info.getChannelMentions();
+		if(mentions.size() != 1) {
+			return new CommandResponse("Usage: "+usage,true);
 		}
-		TextChannel logChannel = message.getMentionedChannels().get(0);
+		TextChannel logChannel = mentions.get(0);
 		long id = logChannel.getIdLong();
-		ServerConfig sConfig = handler.getBot().getServerConfig();
-		sConfig.setLoggingChannel(channel.getGuild().getIdLong(), id);
+		ServerConfig sConfig = info.getHandler().getBot().getServerConfig();
+		sConfig.setLoggingChannel(info.getGid(), id);
 		try {
-			sConfig.saveConfig(channel.getGuild().getIdLong());
+			sConfig.saveConfig(info.getGid());
 		} catch (Exception e) {
 			logger.error("Failed to save server config in set logging channel command", e);
-			channel.sendMessage("Critical Error: Failed to save flags!").queue();
-			return;
+			return new CommandResponse("Critical Error: Failed to save flags!",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully set logging channel!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully set logging channel!",true);
 	}
 }

@@ -1,10 +1,8 @@
 package xyz.finlaym.adminbot.action.message.command.commands.permissions;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.permission.PermissionDeclaration;
 
 public class SearchPermissionCommand extends Command{
@@ -14,7 +12,8 @@ public class SearchPermissionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
 		String search = "";
 		for(int i = 1; i < command.length; i++) {
 			search += command[i]+" ";
@@ -23,7 +22,7 @@ public class SearchPermissionCommand extends Command{
 		
 		String s = "Permission:\n\n";
 		
-		for(Command c : handler.getCommands()) {
+		for(Command c : info.getHandler().getCommands()) {
 			String s2 = "-"+c.getName()+" : "+c.getPermission()+" : "+c.getDescription()+"\n";
 			int count = 0;
 			for(PermissionDeclaration d : c.getEffectedPermissions()) {
@@ -36,8 +35,6 @@ public class SearchPermissionCommand extends Command{
 				s += s2;
 			}
 		}
-		channel.sendMessage(s).queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse(s,false,true);
 	}
 }

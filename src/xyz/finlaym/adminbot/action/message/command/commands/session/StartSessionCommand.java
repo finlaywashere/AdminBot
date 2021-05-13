@@ -1,10 +1,9 @@
 package xyz.finlaym.adminbot.action.message.command.commands.session;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.session.Session;
 
 public class StartSessionCommand extends Command{
@@ -14,12 +13,10 @@ public class StartSessionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		handler.getBot().getSessionConfig().setSession(channel.getGuild().getIdLong(), member.getIdLong(), new Session());
-		if(!silence)
-			channel.sendMessage("Started command session!").queue();
-		if(silence)
-			message.delete().queue();
+	public CommandResponse execute(CommandInfo info) {
+		CommandHandler handler = info.getHandler();
+		handler.getBot().getSessionConfig().setSession(info.getGid(), info.getUid(), new Session());
+		return new CommandResponse("Started command session!");
 	}
 
 }

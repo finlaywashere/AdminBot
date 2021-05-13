@@ -7,9 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.PermissionOverride;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -54,7 +54,7 @@ public class ReservationManager extends ListenerAdapter{
 		manager.queue();
 		rConfig.removeReservation(vc.getGuild().getIdLong(), vc.getIdLong());
 	}
-	public void addReservation(VoiceChannel vc, List<User> users, TextChannel channel) throws Exception {
+	public void addReservation(VoiceChannel vc, List<Member> users, TextChannel channel) throws Exception {
 		ReservationState state = rConfig.getReservation(vc.getGuild().getIdLong(), vc.getIdLong());
 		if(state != null)
 			return;
@@ -79,8 +79,8 @@ public class ReservationManager extends ListenerAdapter{
 		ArrayList<Permission> perms = new ArrayList<Permission>();
 		perms.add(Permission.VOICE_CONNECT);
 		perms.add(Permission.VOICE_SPEAK);
-		for(User u : users) {
-			manager.putPermissionOverride(vc.getGuild().getMember(u), perms, new ArrayList<Permission>());
+		for(Member u : users) {
+			manager.putPermissionOverride(u, perms, new ArrayList<Permission>());
 		}
 		manager.queue();
 	}

@@ -4,12 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.GuildVoiceState;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 
 public class ReserveChannelCommand extends Command{
 	
@@ -20,23 +19,19 @@ public class ReserveChannelCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		GuildVoiceState voiceState = member.getVoiceState();
+	public CommandResponse execute(CommandInfo info) {
+		CommandHandler handler = info.getHandler();
+		GuildVoiceState voiceState = info.getSender().getVoiceState();
 		if(voiceState.getChannel() == null) {
-			channel.sendMessage("You must be in a voice channel to reserve it!").queue();
-			return;
+			return new CommandResponse("You must be in a voice channel to reserve it!",true);
 		}
-		VoiceChannel vc = member.getVoiceState().getChannel();
+		VoiceChannel vc = info.getSender().getVoiceState().getChannel();
 		try {
-			handler.getBot().getReservationManager().addReservation(vc,message.getMentionedUsers(),channel);
+			handler.getBot().getReservationManager().addReservation(vc,info.getMemberMentions(),info.getChannel());
 		} catch (Exception e) {
 			logger.error("Failed to add channel reservation in reserve channel command", e);
-			channel.sendMessage("Critical error occurred while attempting to reserve channel!").queue();
-			return;
+			return new CommandResponse("Critical error occurred while attempting to reserve channel!",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully reserved channel!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully reserved channel!");
 	}
 }

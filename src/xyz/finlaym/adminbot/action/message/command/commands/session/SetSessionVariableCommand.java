@@ -1,10 +1,9 @@
 package xyz.finlaym.adminbot.action.message.command.commands.session;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.session.Session;
 
 public class SetSessionVariableCommand extends Command{
@@ -14,18 +13,19 @@ public class SetSessionVariableCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
 		if(command.length < 3) {
-			channel.sendMessage("Usage: "+usage).queue();
-			return;
+			return new CommandResponse("Usage: "+usage,true);
 		}
-		long gid = channel.getGuild().getIdLong();
-		long uid = member.getIdLong();
+		long gid = info.getGid();
+		long uid = info.getUid();
+		
+		CommandHandler handler = info.getHandler();
 		
 		Session s = handler.getBot().getSessionConfig().getSession(gid, uid);
 		if(s == null) {
-			channel.sendMessage("Error: No session!").queue();
-			return;
+			return new CommandResponse("Error: No session!",true);
 		}
 		
 		String key = command[1];
@@ -36,9 +36,6 @@ public class SetSessionVariableCommand extends Command{
 			}
 		}
 		s.getVariables().put(key, value);
-		if(!silence)
-			channel.sendMessage("Successfully set session variable!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully set session variable!");
 	}
 }

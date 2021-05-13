@@ -6,11 +6,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 
 public class AddResponseCommand extends Command {
@@ -22,31 +21,28 @@ public class AddResponseCommand extends Command {
 	}
 	
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
 		if(command.length < 3) {
-			channel.sendMessage(usage).queue();
-			return;
+			return new CommandResponse(usage,true);
 		}
 		String trigger = command[1].replaceAll("_", " ");
 		String response = "";
 		for(int i = 2; i < command.length; i++) {
 			response += command[i] + " ";
 		}
-		List<CustomResponse> currResponses = handler.getBot().getServerConfig().getResponses(channel.getGuild().getIdLong());
+		CommandHandler handler = info.getHandler();
+		List<CustomResponse> currResponses = handler.getBot().getServerConfig().getResponses(info.getGid());
 		if(currResponses == null)
 			currResponses = new ArrayList<CustomResponse>();
 		currResponses.add(CustomResponse.fromStringSingle(response.replaceAll(",", "&comma")+","+trigger));
-		handler.getBot().getServerConfig().setResponses(channel.getGuild().getIdLong(), currResponses);
+		handler.getBot().getServerConfig().setResponses(info.getGid(), currResponses);
 		try {
-			handler.getBot().getServerConfig().saveConfig(channel.getGuild().getIdLong());
+			handler.getBot().getServerConfig().saveConfig(info.getGid());
 		} catch (Exception e) {
 			logger.error("Failed to save server config in add response command", e);
-			channel.sendMessage("Critical Error: Failed to save responses!").queue();
-			return;
+			return new CommandResponse("Critical Error: Failed to save responses!",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully added custom response to database!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully added custom response to database!");
 	}
 }

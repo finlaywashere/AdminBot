@@ -5,12 +5,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.alias.Alias;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 
 public class SetAliasCommand extends Command{
@@ -22,21 +20,20 @@ public class SetAliasCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
 		if(command.length != 3) {
-			channel.sendMessage("Usage: "+usage).queue();
-			return;
+			return new CommandResponse("Usage: "+usage,true);
 		}
-		long gid = channel.getGuild().getIdLong();
-		ServerConfig sConfig = handler.getBot().getServerConfig();
+		long gid = info.getGid();
+		ServerConfig sConfig = info.getHandler().getBot().getServerConfig();
 		List<Alias> aliases = sConfig.getAliases(gid);
 		if(aliases == null || aliases.size() == 0) {
 			try {
 				sConfig.loadConfig(gid);
 			} catch (Exception e) {
 				logger.error("Failed to load server configuration for guild", e);
-				channel.sendMessage("Critical database error: Failed to load server configuration!").queue();
-				return;
+				return new CommandResponse("Critical database error: Failed to load server configuration!",true);
 			}
 			aliases = sConfig.getAliases(gid);
 		}
@@ -47,10 +44,8 @@ public class SetAliasCommand extends Command{
 			sConfig.saveConfig(gid);
 		} catch (Exception e) {
 			logger.error("Failed to save server configuration for guild", e);
-			channel.sendMessage("Critical database error: Failed to save server configuration!").queue();
-			return;
+			return new CommandResponse("Critical database error: Failed to save server configuration!",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully added alias").queue();
+		return new CommandResponse("Successfully added alias");
 	}
 }
