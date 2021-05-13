@@ -19,4 +19,13 @@ public class MathUtils {
 			return false;
 		}
 	}
+	@SuppressWarnings("unused")
+	public static boolean isBoolean(String s) {
+		try {
+			boolean b = Boolean.valueOf(s);
+			return true;
+		}catch(Exception e) {
+			return false;
+		}
+	}
 }

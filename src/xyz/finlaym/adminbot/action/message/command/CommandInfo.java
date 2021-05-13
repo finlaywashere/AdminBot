@@ -18,8 +18,9 @@ public class CommandInfo {
 	private List<TextChannel> cMentions;
 	private boolean mentionsEveryone;
 	private CommandHandler handler;
+	private CommandState state;
 	
-	public CommandInfo(String message, Member sender, TextChannel channel, String[] command, List<Member> mMentions, List<Role> rMentions, List<TextChannel> cMentions, boolean mentionsEveryone, CommandHandler handler) {
+	public CommandInfo(String message, Member sender, TextChannel channel, String[] command, List<Member> mMentions, List<Role> rMentions, List<TextChannel> cMentions, boolean mentionsEveryone, CommandHandler handler, CommandState state) {
 		this.message = message;
 		this.sender = sender;
 		this.channel = channel;
@@ -30,6 +31,10 @@ public class CommandInfo {
 		this.cMentions = cMentions;
 		this.mentionsEveryone = mentionsEveryone;
 		this.handler = handler;
+		this.state = state;
+	}
+	public CommandState getState() {
+		return state;
 	}
 	public String getMessage() {
 		return message;

@@ -29,6 +29,7 @@ import xyz.finlaym.adminbot.action.message.command.commands.currency.GetBalanceC
 import xyz.finlaym.adminbot.action.message.command.commands.currency.SetBalanceCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.currency.SetCurrencySuffixCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.helper.SetStateCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.AddPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.ListPermissionsCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.ModifyPermissionsRawCommand;
@@ -92,6 +93,7 @@ public class CommandHandler {
 		this.commands.add(new SetAliasCommand());
 		this.commands.add(new ListAliasesCommand());
 		this.commands.add(new DeleteAliasCommand());
+		this.commands.add(new SetStateCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -107,7 +109,7 @@ public class CommandHandler {
 		String prefix = this.bot.getServerConfig().getPrefix(gid);
 		if(!message.getContentRaw().startsWith(prefix))
 			return;
-		String[] commands = message.getContentRaw().substring(prefix.length()).trim().split("\\|");
+		String[] commands = message.getContentRaw().substring(prefix.length()).trim().split("\\||\\&");
 		if(commands.length == 0)
 			return;
 		boolean silenced = false;
@@ -115,25 +117,38 @@ public class CommandHandler {
 			commands[0] = commands[0].substring(1);
 			silenced = true;
 		}
+		CommandState state = new CommandState(channel, silenced);
 		CommandResponse response = null;
+		int charIndex = 0;
 		for(int i = 0; i < commands.length; i++) {
+			char character = message.getContentRaw().charAt(charIndex);
+			charIndex += commands[i].length() + 1;
 			commands[i] = commands[i].trim();
-			if(response != null) {
+			if(response != null && character == '|') {
 				commands[i] += " "+response.getMessage();
 			}
 			String[] command = commands[i].split(" ");
 			try {
-				response = runCommand(member,channel,commands[i],command,message.getMentionedMembers(),message.getMentionedRoles(), message.getMentionedChannels(),message.mentionsEveryone());
+				response = runCommand(member,channel,commands[i],command,message.getMentionedMembers(),message.getMentionedRoles(), message.getMentionedChannels(),message.mentionsEveryone(),state);
 				if(response == null) {
 					if(i == 0)
 						return; // Command not found
 					else
-						channel.sendMessage("Error: Command \""+commands[i]+"\" not found!").queue();
+						state.getOutputChannel().sendMessage("Error: Command \""+commands[i]+"\" not found!").queue();
 				}
-				if(response.isFailure())
-					break;
+				if(response.getState() != null) {
+					state = response.getState();
+				}
+				if(i == commands.length-1 || message.getContentRaw().charAt(charIndex) == '&') {
+					if((state.isSilenced() && response.isFailure()) || !state.isSilenced() || response.isForce()) {
+						String[] newMessage = splitMessage(response.getMessage()); 
+						for(String s : newMessage) {
+							state.getOutputChannel().sendMessage(s).queue();
+						}
+					}
+				}
 			}catch(Exception e) {
-				channel.sendMessage("Error: Failed to execute command!").queue();
+				state.getOutputChannel().sendMessage("Error: Failed to execute command!").queue();
 				logger.error("Failed to execute command!", e);
 				return;
 			}
@@ -142,10 +157,6 @@ public class CommandHandler {
 		if((silenced && response.isFailure()) || !silenced || response.isForce()) {
 			if(silenced && response.isForce())
 				delete = true;
-			String[] newMessage = splitMessage(response.getMessage()); 
-			for(String s : newMessage) {
-				channel.sendMessage(s).queue();
-			}
 		}else {
 			delete = true;
 		}
@@ -169,7 +180,7 @@ public class CommandHandler {
 		}
 		return messages;
 	}
-	public CommandResponse runCommand(Member member, TextChannel channel, String message, String[] command, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone) throws Exception{
+	public CommandResponse runCommand(Member member, TextChannel channel, String message, String[] command, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone, CommandState state) throws Exception{
 		long gid = channel.getGuild().getIdLong();
 		// Handle command before permission checks to ensure there is no way to bypass them
 		// This replaces variables, etc in the command with environment variables and this could be used to circumvent permission checks
@@ -186,7 +197,7 @@ public class CommandHandler {
 					long requiredFlags = c.getRequiredFlags();
 					if(requiredFlags == -1 || checkFlags(requiredFlags, bot.getServerConfig().getFlags(gid))) {
 						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "successfully executed command \""+message+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
-						CommandInfo info = new CommandInfo(message, member, channel, command, mMentioned, rMentioned, cMentioned, mentionsEveryone, this);
+						CommandInfo info = new CommandInfo(message, member, channel, command, mMentioned, rMentioned, cMentioned, mentionsEveryone, this, state);
 						CommandResponse response = c.execute(info);
 						return response;
 					}else {
