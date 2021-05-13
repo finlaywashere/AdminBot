@@ -115,13 +115,41 @@ public class CommandHandler {
 			CommandResponse response = runCommand(member,channel,message.getContentRaw(),command,message.getMentionedMembers(),message.getMentionedRoles(), message.getMentionedChannels(),message.mentionsEveryone());
 			if(response == null)
 				return; // Command not found
-			if((silenced && response.isFailure()) || !silenced) {
-				channel.sendMessage(response.getMessage()).queue();
+			boolean delete = false;
+			if((silenced && response.isFailure()) || !silenced || response.isForce()) {
+				if(silenced && response.isForce())
+					delete = true;
+				String[] newMessage = splitMessage(response.getMessage()); 
+				for(String s : newMessage) {
+					channel.sendMessage(s).queue();
+				}
+			}else {
+				delete = true;
 			}
+			if(delete)
+				message.delete().queue();
 		}catch(Exception e) {
 			channel.sendMessage("Error: Failed to execute command!").queue();
+			logger.error("Failed to execute command!", e);
 			return;
 		}
+	}
+	public String[] splitMessage(String message) {
+		String[] messages = new String[message.length()/2000 + ((message.length()%2000) > 0 ? 1 : 0)];
+		int curr = 0;
+		for(String s : message.split("\n")) {
+			if(messages[curr] == null) {
+				messages[curr] = s;
+				continue;
+			}
+			if(messages[curr].length() + s.length() > 2000) {
+				curr++;
+				messages[curr] = s;
+				continue;
+			}
+			messages[curr] += "\n"+s;
+		}
+		return messages;
 	}
 	public CommandResponse runCommand(Member member, TextChannel channel, String message, String[] command, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone) throws Exception{
 		long gid = channel.getGuild().getIdLong();
