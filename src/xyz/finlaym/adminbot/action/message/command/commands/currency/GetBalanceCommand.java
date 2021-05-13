@@ -4,11 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.User;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.permission.PermissionDeclaration;
 import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
@@ -23,44 +22,39 @@ public class GetBalanceCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		CommandHandler handler = info.getHandler();
 		CurrencyConfig cConfig = handler.getBot().getCurrencyConfig();
 		ServerConfig sConfig = handler.getBot().getServerConfig();
-		String currencySuffix = sConfig.getCurrencySuffix(channel.getGuild().getIdLong());
-		long gid = channel.getGuild().getIdLong();
-		if(message.getMentionedUsers().size() > 0) {
+		String currencySuffix = sConfig.getCurrencySuffix(info.getGid());
+		if(info.getMemberMentions().size() > 0) {
 			try {
-				if(handler.getBot().getPermissionsConfig().checkPermission(channel.getGuild(), member, "command.getbalance.others")) {
-					User u = message.getMentionedUsers().get(0);
-					int balance = cConfig.getCurrency(gid, u.getIdLong());
+				if(handler.getBot().getPermissionsConfig().checkPermission(info.getGuild(), info.getSender(), "command.getbalance.others")) {
+					Member m = info.getMemberMentions().get(0);
+					int balance = cConfig.getCurrency(info.getGid(), m.getIdLong());
 					if(balance == 0) {
-						cConfig.loadCurrency(gid,u.getIdLong());
-						balance = cConfig.getCurrency(gid, u.getIdLong());
+						cConfig.loadCurrency(info.getGid(),m.getIdLong());
+						balance = cConfig.getCurrency(info.getGid(), m.getIdLong());
 					}
-					channel.sendMessage("User's balance is "+balance+currencySuffix+"!").queue();
+					return new CommandResponse("User's balance is "+balance+currencySuffix+"!");
 				}else {
-					channel.sendMessage("Error: Insufficient permissions to view another user's balance").queue();
+					return new CommandResponse("Error: Insufficient permissions to view another user's balance",true);
 				}
 			} catch (Exception e) {
 				logger.error("Failed to check permissions in get balance command", e);
-				channel.sendMessage("Critical Error: Failed to check permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to check permissions!", true);
 			}
-			return;
 		}
-		int balance = cConfig.getCurrency(gid,member.getIdLong());
+		int balance = cConfig.getCurrency(info.getGid(),info.getUid());
 		if(balance == 0) {
 			try {
-				cConfig.loadCurrency(gid,member.getIdLong());
+				cConfig.loadCurrency(info.getGid(),info.getUid());
 			} catch (Exception e) {
 				logger.error("Failed to load currency from database in get balance command", e);
-				channel.sendMessage("Critical Error: Failed to load currency from database!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to load currency from database!",true);
 			}
-			balance = cConfig.getCurrency(gid, member.getIdLong());
+			balance = cConfig.getCurrency(info.getGid(), info.getUid());
 		}
-		channel.sendMessage("Your balance is "+balance+currencySuffix+"!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Your balance is "+balance+currencySuffix+"!");
 	}
 }

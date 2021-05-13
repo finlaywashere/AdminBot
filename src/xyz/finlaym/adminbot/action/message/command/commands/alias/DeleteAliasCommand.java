@@ -5,12 +5,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.alias.Alias;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.utils.MathUtils;
 
@@ -23,43 +21,37 @@ public class DeleteAliasCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
 		if(command.length != 2 || !MathUtils.isInt(command[1])) {
-			channel.sendMessage("Usage: "+usage).queue();
-			return;
+			return new CommandResponse("Usage: "+usage,true);
 		}
 		int id = Integer.valueOf(command[1])-1;
 		if(id < 0) {
-			channel.sendMessage("Alias id cannot be less than 1!").queue();
-			return;
+			return new CommandResponse("Alias id cannot be less than 1!",true);
 		}
-		long gid = channel.getGuild().getIdLong();
-		ServerConfig sConfig = handler.getBot().getServerConfig();
-		List<Alias> aliases = sConfig.getAliases(gid);
+		ServerConfig sConfig = info.getHandler().getBot().getServerConfig();
+		List<Alias> aliases = sConfig.getAliases(info.getGid());
 		if(aliases == null || aliases.size() == 0) {
 			try {
-				sConfig.loadConfig(gid);
+				sConfig.loadConfig(info.getGid());
 			} catch (Exception e) {
 				logger.error("Failed to load server configuration for guild!",e);
-				channel.sendMessage("Critical error: Failed to load server configuration from database!").queue();
-				return;
+				return new CommandResponse("Critical error: Failed to load server configuration from database!",true);
 			}
-			aliases = sConfig.getAliases(gid);
+			aliases = sConfig.getAliases(info.getGid());
 		}
 		if(id >= aliases.size()) {
-			channel.sendMessage("Alias id cannot be greater than "+aliases.size()+"!").queue();
-			return;
+			return new CommandResponse("Alias id cannot be greater than "+aliases.size()+"!",true);
 		}
 		aliases.remove(id);
-		sConfig.setAliases(gid, aliases);
+		sConfig.setAliases(info.getGid(), aliases);
 		try {
-			sConfig.saveConfig(gid);
+			sConfig.saveConfig(info.getGid());
 		} catch (Exception e) {
 			logger.error("Failed to save server configuration for guild", e);
-			channel.sendMessage("Critical error: Failed to save server configuration to database!").queue();
-			return;
+			return new CommandResponse("Critical error: Failed to save server configuration to database!",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully deleted alias from database!").queue();
+		return new CommandResponse("Successfully deleted alias from database!");
 	}
 }

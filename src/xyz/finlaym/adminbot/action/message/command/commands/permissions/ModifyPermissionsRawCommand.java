@@ -3,11 +3,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.permissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.permission.Group;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
@@ -23,14 +21,13 @@ public class ModifyPermissionsRawCommand extends Command {
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
 		if(command.length != 5) {
-			channel.sendMessage("Incorrect usage of command!\nUsage: -modifypermission <action> <id type> <id> permission").queue();
-			return;
+			return new CommandResponse("Incorrect usage of command!\nUsage: -modifypermission <action> <id type> <id> permission",true);
 		}
 		if(!MathUtils.isLong(command[3])) {
-			channel.sendMessage("Error: id must be a group/user id!").queue();
-			return;
+			return new CommandResponse("Error: id must be a group/user id!",true);
 		}
 		GroupIdentifier identifier = null;
 		switch(command[2].toLowerCase()) {
@@ -41,56 +38,47 @@ public class ModifyPermissionsRawCommand extends Command {
 			identifier = new GroupIdentifier(Group.TYPE_USER, Long.valueOf(command[3]));
 			break;
 		default:
-			channel.sendMessage("Error: Invalid id type\nValid id types are: role, user");
-			return;
+			return new CommandResponse("Error: Invalid id type\nValid id types are: role, user",true);
 		}
-		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
+		PermissionsConfig pConfig = info.getHandler().getBot().getPermissionsConfig();
 		switch(command[1].toLowerCase()) {
 		case "add":
 			try {
-				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
-					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);
+				if(pConfig.getGroupPerms(info.getGid(), identifier) == null) {
+					pConfig.loadGroupPermissions(info.getGid(),identifier);
 				}
 			} catch (Exception e) {
 				logger.error("Failed to load permissions in modify permissions raw command", e);
-				channel.sendMessage("Critical Error: Failed to load permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to load permissions!",true);
 			}
-			pConfig.addGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[4]));
+			pConfig.addGroupPermission(info.getGid(), identifier, new Permission(command[4]));
 			try {
-				pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
+				pConfig.saveGroupPermissions(info.getGid(), identifier);
 			} catch (Exception e) {
 				logger.error("Failed to save permissions in modify permissions raw command", e);
-				channel.sendMessage("Critical Error: Failed to save permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to save permissions!",true);
 			}
 			break;
 		case "remove":
 			try {
-				if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), identifier) == null) {
-					pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),identifier);
+				if(pConfig.getGroupPerms(info.getGid(), identifier) == null) {
+					pConfig.loadGroupPermissions(info.getGid(),identifier);
 				}
 			} catch (Exception e) {
 				logger.error("Failed to load permissions in modify permissions raw command", e);
-				channel.sendMessage("Critical Error: Failed to load permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to load permissions!",true);
 			}
-			pConfig.removeGroupPermission(channel.getGuild().getIdLong(), identifier, new Permission(command[4]));
+			pConfig.removeGroupPermission(info.getGid(), identifier, new Permission(command[4]));
 			try {
-				pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), identifier);
+				pConfig.saveGroupPermissions(info.getGid(), identifier);
 			} catch (Exception e) {
 				logger.error("Failed to save permissions in modify permissions raw command", e);
-				channel.sendMessage("Critical Error: Failed to save permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to save permissions!",true);
 			}
 			break;
 		default:
-			channel.sendMessage("Error: Invalid action\nValid actions are: add, remove").queue();
-			return;
+			return new CommandResponse("Error: Invalid action\nValid actions are: add, remove",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully modified permission structure!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully modified permission structure!");
 	}
 }

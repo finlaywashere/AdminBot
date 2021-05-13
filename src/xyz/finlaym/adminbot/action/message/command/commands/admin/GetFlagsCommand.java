@@ -3,11 +3,10 @@ package xyz.finlaym.adminbot.action.message.command.commands.admin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 
 public class GetFlagsCommand extends Command{
@@ -19,21 +18,18 @@ public class GetFlagsCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		CommandHandler handler = info.getHandler();
 		ServerConfig sConfig = handler.getBot().getServerConfig();
 		try {
-			sConfig.loadConfig(channel.getGuild().getIdLong());
+			sConfig.loadConfig(info.getGid());
 		} catch (Exception e) {
 			logger.error("Failed to load server info in get flags command",e);
-			channel.sendMessage("Critical Error: Failed to load server info!").queue();
-			return;
+			return new CommandResponse("Critical Error: Failed to load server info!",true);
 		}
-		long flags = sConfig.getFlags(channel.getGuild().getIdLong());
+		long flags = sConfig.getFlags(info.getGid());
 		String s = "Flag\t\tState\n";
 		s += "CURRENCY\t\t"+((flags & ServerConfig.CURRENCY_FLAG) == 1 ? "ON" : "OFF");
-		channel.sendMessage(s).queue();
-		
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse(s);
 	}
 }

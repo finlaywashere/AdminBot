@@ -3,11 +3,10 @@ package xyz.finlaym.adminbot.action.message.command.commands.session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.permission.PermissionDeclaration;
 import xyz.finlaym.adminbot.utils.MathUtils;
 
@@ -21,36 +20,32 @@ public class DeleteSessionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		if(message.getMentionedUsers().size() > 0 && command.length > 1) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
+		CommandHandler handler = info.getHandler();
+		if(info.getMemberMentions().size() > 0 && command.length > 1) {
 			long id;
-			if(message.getMentionedUsers().size() > 0)
-				id = message.getMentionedUsers().get(0).getIdLong();
+			if(info.getMemberMentions().size() > 0)
+				id = info.getMemberMentions().get(0).getIdLong();
 			else {
 				if(!MathUtils.isLong(command[1])) {
-					channel.sendMessage("Error: User id must be a number!").queue();
-					return;
+					return new CommandResponse("Error: User id must be a number!",true);
 				}
 				id = Long.valueOf(command[1]);
 			}
 			try {
-				if(handler.getBot().getPermissionsConfig().checkPermission(channel.getGuild(), member, "command.deletesession.others")) {
-					handler.getBot().getSessionConfig().setSession(channel.getGuild().getIdLong(), id, null);
+				if(handler.getBot().getPermissionsConfig().checkPermission(info.getGuild(), info.getSender(), "command.deletesession.others")) {
+					handler.getBot().getSessionConfig().setSession(info.getGid(), id, null);
 				}else {
-					channel.sendMessage("Error: Insufficient permissions to execute command!").queue();
-					return;
+					return new CommandResponse("Error: Insufficient permissions to execute command!",true);
 				}
 			} catch (Exception e) {
 				logger.error("Error deleting session",e);
-				channel.sendMessage("Critical Error: Failed to check user's permissions!").queue();
-				return;
+				return new CommandResponse("Critical Error: Failed to check user's permissions!",true);
 			}
 		}else {
-			handler.getBot().getSessionConfig().setSession(channel.getGuild().getIdLong(), member.getIdLong(), null);
+			handler.getBot().getSessionConfig().setSession(info.getGid(), info.getUid(), null);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully deleted session!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully deleted session!");
 	}
 }

@@ -3,11 +3,10 @@ package xyz.finlaym.adminbot.action.message.command.commands.session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.permission.PermissionDeclaration;
 import xyz.finlaym.adminbot.action.session.HistoryElement;
 import xyz.finlaym.adminbot.action.session.Session;
@@ -23,53 +22,48 @@ public class ViewHistoryCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
+		CommandHandler handler = info.getHandler();
 		int max = 20;
-		long gid = channel.getGuild().getIdLong();
-		long uid = member.getIdLong();
+		long gid = info.getGid();
+		long uid = info.getUid();
 		if(command.length > 1) {
 			if(!MathUtils.isInt(command[1])) {
-				channel.sendMessage("Error: Max number of history elements must be an integer!").queue();
-				return;
+				return new CommandResponse("Error: Max number of history elements must be an integer!",true);
 			}
 			max = Integer.valueOf(command[1]);
 			if(command.length > 2) {
 				try {
-					if(!handler.getBot().getPermissionsConfig().checkPermission(channel.getGuild(), member, "command.viewhistory.others")) {
-						channel.sendMessage("Error: Insufficient permissions to execute command!").queue();
-						return;
+					if(!handler.getBot().getPermissionsConfig().checkPermission(info.getGuild(), info.getSender(), "command.viewhistory.others")) {
+						return new CommandResponse("Error: Insufficient permissions to execute command!",true);
 					}else {
-						if(message.getMentionedUsers().size() > 0) {
-							uid = message.getMentionedUsers().get(0).getIdLong();
+						if(info.getMemberMentions().size() > 0) {
+							uid = info.getMemberMentions().get(0).getIdLong();
 						}else {
 							if(!MathUtils.isLong(command[2])) {
-								channel.sendMessage("Error: User id must be a number!").queue();
-								return;
+								return new CommandResponse("Error: User id must be a number!",true);
 							}
 							uid = Long.valueOf(command[2]);
 						}
 					}
 				} catch (Exception e) {
 					logger.error("Error viewing user's session history",e);
-					channel.sendMessage("Critical Error: Failed to check user's permissions!").queue();
-					return;
+					return new CommandResponse("Critical Error: Failed to check user's permissions!",true);
 				}
 			}
 		}
 		Session s = handler.getBot().getSessionConfig().getSession(gid, uid);
 		if(s == null) {
-			channel.sendMessage("Error: No session!").queue();
-			return;
+			return new CommandResponse("Error: No session!",true);
 		}
 		String m = "User's command history:\n\n";
 		for(int i = max-1; i >= 0; i--) {
 			if(i >= s.getHistory().size())
 				continue;
 			HistoryElement elem = s.getHistory().get(i);
-			m += "`"+elem.getMessage().getContentRaw()+"`\n";
+			m += "`"+elem.getMessage()+"`\n";
 		}
-		channel.sendMessage(m).queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse(m);
 	}
 }

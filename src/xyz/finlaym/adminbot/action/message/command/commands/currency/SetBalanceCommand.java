@@ -3,11 +3,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.currency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.utils.MathUtils;
@@ -21,33 +19,27 @@ public class SetBalanceCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		if(message.getMentionedUsers().size() == 0 || command.length < 3) {
-			channel.sendMessage("Usage: "+usage).queue();
-			return;
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
+		if(info.getMemberMentions().size() == 0 || command.length < 3) {
+			return new CommandResponse("Usage: "+usage, true);
 		}
-		CurrencyConfig cConfig = handler.getBot().getCurrencyConfig();
-		ServerConfig sConfig = handler.getBot().getServerConfig();
+		CurrencyConfig cConfig = info.getHandler().getBot().getCurrencyConfig();
+		ServerConfig sConfig = info.getHandler().getBot().getServerConfig();
 		if(!MathUtils.isInt(command[2])) {
-			channel.sendMessage("User's balance must be an integer!").queue();
-			return;
+			return new CommandResponse("User's balance must be an integer!",true);
 		}
 		int balance = Integer.valueOf(command[2]);
-		long gid = channel.getGuild().getIdLong();
-		long id = message.getMentionedUsers().get(0).getIdLong();
+		long gid = info.getGid();
+		long id = info.getMemberMentions().get(0).getIdLong();
 		cConfig.setCurrency(gid, id, balance);
 		try {
 			cConfig.saveCurrency(gid, id);
 		} catch (Exception e) {
 			logger.error("Failed to save currency config in set balance command", e);
-			channel.sendMessage("Critical Error: Failed to save balance to database!").queue();
-			return;
+			return new CommandResponse("Critical Error: Failed to save balance to database!",true);
 		}
-		if(!silence) {
-			String suffix = sConfig.getCurrencySuffix(gid);
-			channel.sendMessage("Successfully set user's balance to "+balance+suffix+"!").queue();
-		}
-		if(silence)
-			message.delete().queue();
+		String suffix = sConfig.getCurrencySuffix(gid);
+		return new CommandResponse("Successfully set user's balance to "+balance+suffix+"!",true);
 	}
 }

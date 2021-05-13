@@ -4,11 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.permission.Group;
 import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
@@ -23,38 +22,37 @@ public class RemovePermissionCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		PermissionsConfig pConfig = handler.getBot().getPermissionsConfig();
+	public CommandResponse execute(CommandInfo info) {
+		PermissionsConfig pConfig = info.getHandler().getBot().getPermissionsConfig();
 		GroupIdentifier id = null;
-		if(message.getMentionedRoles().size() == 1) {
-			Role r = message.getMentionedRoles().get(0);
+		if(info.getRoleMentions().size() == 1) {
+			Role r = info.getRoleMentions().get(0);
 			id = new GroupIdentifier(Group.TYPE_ROLE, r.getIdLong());
-		}else if(message.getMentionedMembers().size() == 1){
-			Member m = message.getMentionedMembers().get(0);
+		}else if(info.getMemberMentions().size() == 1){
+			Member m = info.getMemberMentions().get(0);
 			id = new GroupIdentifier(Group.TYPE_USER, m.getIdLong());
 		}
 		if(id == null){
-			channel.sendMessage("You must mention one role/user to remove permissions from!").queue();
-			return;
+			return new CommandResponse("You must mention one role/user to remove permissions from!",true);
 		}
 		try {
-			if(pConfig.getGroupPerms(channel.getGuild().getIdLong(), id) == null) {
-				pConfig.loadGroupPermissions(channel.getGuild().getIdLong(),id);
+			if(pConfig.getGroupPerms(info.getGid(), id) == null) {
+				pConfig.loadGroupPermissions(info.getGid(),id);
 			}
 		} catch (Exception e) {
 			logger.error("Failed to load permissions in remove permission command", e);
+			return new CommandResponse("Critical error: Failed to load permissions from database!",true);
 		}
+		String[] command = info.getCommand();
 		for(int i = 2; i < command.length; i++) {
-			pConfig.removeGroupPermission(channel.getGuild().getIdLong(), id, new Permission(command[i]));
+			pConfig.removeGroupPermission(info.getGid(), id, new Permission(command[i]));
 		}
 		try {
-			pConfig.saveGroupPermissions(channel.getGuild().getIdLong(), id);
+			pConfig.saveGroupPermissions(info.getGid(), id);
 		} catch (Exception e) {
 			logger.error("Failed to save permissions in remove permission command", e);
+			return new CommandResponse("Critical error: Failed to save permissions to database!",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully removed permission(s) from users/roles!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully removed permission(s) from users/roles!");
 	}
 }

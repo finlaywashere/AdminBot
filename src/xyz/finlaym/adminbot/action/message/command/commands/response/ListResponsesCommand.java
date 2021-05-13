@@ -5,11 +5,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
 import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.message.response.CustomResponse;
 
 public class ListResponsesCommand extends Command{
@@ -21,20 +20,19 @@ public class ListResponsesCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
-		List<CustomResponse> responses = handler.getBot().getServerConfig().getResponses(channel.getGuild().getIdLong());
+	public CommandResponse execute(CommandInfo info) {
+		CommandHandler handler = info.getHandler();
+		List<CustomResponse> responses = handler.getBot().getServerConfig().getResponses(info.getGid());
 		if(responses == null) {
 			try {
-				handler.getBot().getServerConfig().loadConfig(channel.getGuild().getIdLong());
+				handler.getBot().getServerConfig().loadConfig(info.getGid());
 			} catch (Exception e) {
 				logger.error("Failed to load server config in list responses command", e);
-				channel.sendMessage("Error: Failed to load database!").queue();
-				return;
+				return new CommandResponse("Error: Failed to load database!",true);
 			}
-			responses = handler.getBot().getServerConfig().getResponses(channel.getGuild().getIdLong());
-			if(responses == null) {
-				channel.sendMessage("This guild has no custom responses!").queue();
-				return;
+			responses = handler.getBot().getServerConfig().getResponses(info.getGid());
+			if(responses == null || responses.size() == 0) {
+				return new CommandResponse("This guild has no custom responses!");
 			}
 		}
 		String s = "Custom Responses:\nId\tTrigger\t\tResponse\n";
@@ -42,8 +40,6 @@ public class ListResponsesCommand extends Command{
 			CustomResponse r = responses.get(i);
 			s += "\n"+(i+1)+"\t"+r.getTrigger()+"\t\t"+r.getResponse().replaceAll("&comma", ",");
 		}
-		channel.sendMessage(s).queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse(s);
 	}
 }

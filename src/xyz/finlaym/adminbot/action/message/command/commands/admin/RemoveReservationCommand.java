@@ -4,12 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.GuildVoiceState;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class RemoveReservationCommand extends Command{
@@ -21,32 +19,27 @@ public class RemoveReservationCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
 		VoiceChannel vc;
+		String[] command = info.getCommand();
 		if(command.length > 1) {
 			if(!MathUtils.isLong(command[1])) {
-				channel.sendMessage("Channel id must be a number!").queue();
-				return;
+				return new CommandResponse("Channel id must be a number!",true);
 			}
-			vc = channel.getGuild().getVoiceChannelById(Long.valueOf(command[1]));
+			vc = info.getGuild().getVoiceChannelById(Long.valueOf(command[1]));
 		}else {
-			GuildVoiceState voiceState = member.getVoiceState();
+			GuildVoiceState voiceState = info.getSender().getVoiceState();
 			if(voiceState.getChannel() == null) {
-				channel.sendMessage("You must be in a voice channel to un reserve it, alternatively specify a channels ID!").queue();
-				return;
+				return new CommandResponse("You must be in a voice channel to un reserve it, alternatively specify a channels ID!",true);
 			}
-			vc = member.getVoiceState().getChannel();
+			vc = info.getSender().getVoiceState().getChannel();
 		}
 		try {
-			handler.getBot().getReservationManager().removeReservation(vc);
+			info.getHandler().getBot().getReservationManager().removeReservation(vc);
 		}catch(Exception e) {
 			logger.error("Error in removing reservation command",e);
-			channel.sendMessage("Critical error occurred while attempting to remove reservation!").queue();
-			return;
+			return new CommandResponse("Critical error occurred while attempting to remove reservation!",true);
 		}
-		if(!silence)
-			channel.sendMessage("Successfully removed a reservation on channel \""+vc.getName()+"\"!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully removed a reservation on channel \""+vc.getName()+"\"!");
 	}
 }

@@ -3,11 +3,9 @@ package xyz.finlaym.adminbot.action.message.command.commands.admin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import xyz.finlaym.adminbot.action.message.command.Command;
-import xyz.finlaym.adminbot.action.message.command.CommandHandler;
+import xyz.finlaym.adminbot.action.message.command.CommandInfo;
+import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 
 public class SetFlagCommand extends Command{
@@ -19,11 +17,11 @@ public class SetFlagCommand extends Command{
 	}
 
 	@Override
-	public void execute(Member member, TextChannel channel, String[] command, CommandHandler handler, Message message, boolean silence) {
+	public CommandResponse execute(CommandInfo info) {
+		String[] command = info.getCommand();
 		if(command.length < 3) {
 			// Send help menu
-			channel.sendMessage("Usage: "+usage+"\nFlag Options: currency").queue();
-			return;
+			return new CommandResponse("Usage: "+usage+"\nFlag Options: currency",true);
 		}
 		long bit = 0;
 		switch(command[1].toLowerCase()) {
@@ -31,18 +29,16 @@ public class SetFlagCommand extends Command{
 			bit = ServerConfig.CURRENCY_FLAG;
 			break;
 		default:
-			channel.sendMessage("Usage: "+usage).queue();
-			return;
+			return new CommandResponse("Usage: "+usage,true);
 		}
-		ServerConfig sConfig = handler.getBot().getServerConfig();
+		ServerConfig sConfig = info.getHandler().getBot().getServerConfig();
 		try {
-			sConfig.loadConfig(channel.getGuild().getIdLong());
+			sConfig.loadConfig(info.getGid());
 		} catch (Exception e) {
 			logger.error("Failed to load server config in set flag command", e);
-			channel.sendMessage("Critical Error: Failed to save flags!").queue();
-			return;
+			return new CommandResponse("Critical Error: Failed to save flags!",true);
 		}
-		long oldConfig = sConfig.getFlags(channel.getGuild().getIdLong());
+		long oldConfig = sConfig.getFlags(info.getGid());
 		long newValue = oldConfig;
 		switch(command[2].toLowerCase()) {
 		case "on":
@@ -52,22 +48,17 @@ public class SetFlagCommand extends Command{
 			newValue &= ~bit;
 			break;
 		default:
-			channel.sendMessage("Usage: "+usage).queue();
-			return;
+			return new CommandResponse("Usage: "+usage,true);
 		}
-		sConfig.setFlags(channel.getGuild().getIdLong(), newValue);
+		sConfig.setFlags(info.getGid(), newValue);
 		try {
-			sConfig.saveConfig(channel.getGuild().getIdLong());
+			sConfig.saveConfig(info.getGid());
 		} catch (Exception e) {
 			logger.error("Failed to save server config in set flag command", e);
-			channel.sendMessage("Critical Error: Failed to save flags!").queue();
-			return;
+			return new CommandResponse("Critical Error: Failed to save flags!",true);
 		}
 		
-		if(!silence)
-			channel.sendMessage("Successfully set flag!").queue();
-		if(silence)
-			message.delete().queue();
+		return new CommandResponse("Successfully set flag!");
 	}
 	
 }
