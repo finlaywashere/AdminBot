@@ -37,7 +37,7 @@ public class ListAliasesCommand extends Command{
 			Alias a = aliases.get(i);
 			response += (i + 1) + "\t" + a.getOriginalValue() + "\t" + a.getNewValue() + "\n";
 		}
-		return new CommandResponse(response);
+		return new CommandResponse(response,false,true);
 	}
 
 }

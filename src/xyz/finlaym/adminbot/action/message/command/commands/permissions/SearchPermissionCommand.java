@@ -35,6 +35,6 @@ public class SearchPermissionCommand extends Command{
 				s += s2;
 			}
 		}
-		return new CommandResponse(s);
+		return new CommandResponse(s,false,true);
 	}
 }

@@ -40,7 +40,7 @@ public class ListSwearsCommand extends Command{
 			SwearWord swear = swears.get(i);
 			s += "\n"+(i+1)+"\t\t"+swear.getWord()+"\t\t"+swear.getType()+"\t\t"+swear.getMuteRole();
 		}
-		return new CommandResponse(s);
+		return new CommandResponse(s,false,true);
 	}
 
 }

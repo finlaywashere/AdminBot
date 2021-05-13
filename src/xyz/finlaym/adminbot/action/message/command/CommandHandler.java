@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import xyz.finlaym.adminbot.Bot;
 import xyz.finlaym.adminbot.action.alias.AliasTranslator;
 import xyz.finlaym.adminbot.action.message.command.commands.EchoCommand;
@@ -97,42 +99,58 @@ public class CommandHandler {
 	public List<Command> getCommands() {
 		return commands;
 	}
+	public void handleRestrictedCommand(User user, PrivateChannel channel, Message message) {
+		//TODO: Implement restricted commands in private messages
+	}
 	public void handleCommand(Member member, TextChannel channel, Message message){
 		long gid = channel.getGuild().getIdLong();
 		String prefix = this.bot.getServerConfig().getPrefix(gid);
 		if(!message.getContentRaw().startsWith(prefix))
 			return;
-		String[] command = message.getContentRaw().substring(prefix.length()).trim().split(" ");
-		if(command.length == 0)
+		String[] commands = message.getContentRaw().substring(prefix.length()).trim().split("\\|");
+		if(commands.length == 0)
 			return;
 		boolean silenced = false;
-		if(command[0].startsWith("!")) {
-			command[0] = command[0].substring(1);
+		if(commands[0].startsWith("!")) {
+			commands[0] = commands[0].substring(1);
 			silenced = true;
 		}
-		//TODO: Implement wayyyy fancier command parsing
-		try {
-			CommandResponse response = runCommand(member,channel,message.getContentRaw(),command,message.getMentionedMembers(),message.getMentionedRoles(), message.getMentionedChannels(),message.mentionsEveryone());
-			if(response == null)
-				return; // Command not found
-			boolean delete = false;
-			if((silenced && response.isFailure()) || !silenced || response.isForce()) {
-				if(silenced && response.isForce())
-					delete = true;
-				String[] newMessage = splitMessage(response.getMessage()); 
-				for(String s : newMessage) {
-					channel.sendMessage(s).queue();
-				}
-			}else {
-				delete = true;
+		CommandResponse response = null;
+		for(int i = 0; i < commands.length; i++) {
+			commands[i] = commands[i].trim();
+			if(response != null) {
+				commands[i] += " "+response.getMessage();
 			}
-			if(delete)
-				message.delete().queue();
-		}catch(Exception e) {
-			channel.sendMessage("Error: Failed to execute command!").queue();
-			logger.error("Failed to execute command!", e);
-			return;
+			String[] command = commands[i].split(" ");
+			try {
+				response = runCommand(member,channel,commands[i],command,message.getMentionedMembers(),message.getMentionedRoles(), message.getMentionedChannels(),message.mentionsEveryone());
+				if(response == null) {
+					if(i == 0)
+						return; // Command not found
+					else
+						channel.sendMessage("Error: Command \""+commands[i]+"\" not found!").queue();
+				}
+				if(response.isFailure())
+					break;
+			}catch(Exception e) {
+				channel.sendMessage("Error: Failed to execute command!").queue();
+				logger.error("Failed to execute command!", e);
+				return;
+			}
 		}
+		boolean delete = false;
+		if((silenced && response.isFailure()) || !silenced || response.isForce()) {
+			if(silenced && response.isForce())
+				delete = true;
+			String[] newMessage = splitMessage(response.getMessage()); 
+			for(String s : newMessage) {
+				channel.sendMessage(s).queue();
+			}
+		}else {
+			delete = true;
+		}
+		if(delete)
+			message.delete().queue();
 	}
 	public String[] splitMessage(String message) {
 		String[] messages = new String[message.length()/2000 + ((message.length()%2000) > 0 ? 1 : 0)];

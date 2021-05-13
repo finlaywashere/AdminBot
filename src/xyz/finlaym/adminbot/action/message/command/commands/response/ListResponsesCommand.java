@@ -40,6 +40,6 @@ public class ListResponsesCommand extends Command{
 			CustomResponse r = responses.get(i);
 			s += "\n"+(i+1)+"\t"+r.getTrigger()+"\t\t"+r.getResponse().replaceAll("&comma", ",");
 		}
-		return new CommandResponse(s);
+		return new CommandResponse(s,false,true);
 	}
 }

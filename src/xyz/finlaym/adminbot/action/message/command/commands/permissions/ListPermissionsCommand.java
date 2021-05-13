@@ -68,7 +68,7 @@ public class ListPermissionsCommand extends Command{
 							s += "\nNone";
 						}
 						s += "```";
-						return new CommandResponse(s);
+						return new CommandResponse(s,false,true);
 					}else {
 						return new CommandResponse("Error: Insufficient permissions to view role's permissions!",true);
 					}
@@ -90,7 +90,7 @@ public class ListPermissionsCommand extends Command{
 							s += "\nNone";
 						}
 						s += "```";
-						return new CommandResponse(s);
+						return new CommandResponse(s,false,true);
 					}else {
 						return new CommandResponse("Error: Insufficient permissions to view user's permissions!",true);
 					}

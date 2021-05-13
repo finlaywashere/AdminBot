@@ -36,7 +36,7 @@ public class GetBalanceCommand extends Command{
 						cConfig.loadCurrency(info.getGid(),m.getIdLong());
 						balance = cConfig.getCurrency(info.getGid(), m.getIdLong());
 					}
-					return new CommandResponse("User's balance is "+balance+currencySuffix+"!");
+					return new CommandResponse("User's balance is "+balance+currencySuffix+"!",false,true);
 				}else {
 					return new CommandResponse("Error: Insufficient permissions to view another user's balance",true);
 				}
@@ -55,6 +55,6 @@ public class GetBalanceCommand extends Command{
 			}
 			balance = cConfig.getCurrency(info.getGid(), info.getUid());
 		}
-		return new CommandResponse("Your balance is "+balance+currencySuffix+"!");
+		return new CommandResponse("Your balance is "+balance+currencySuffix+"!",false,true);
 	}
 }

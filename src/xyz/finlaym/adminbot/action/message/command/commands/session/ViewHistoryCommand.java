@@ -64,6 +64,6 @@ public class ViewHistoryCommand extends Command{
 			HistoryElement elem = s.getHistory().get(i);
 			m += "`"+elem.getMessage()+"`\n";
 		}
-		return new CommandResponse(m);
+		return new CommandResponse(m,false,true);
 	}
 }
