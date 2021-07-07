@@ -10,6 +10,7 @@ import xyz.finlaym.adminbot.action.message.command.CommandInfo;
 import xyz.finlaym.adminbot.action.message.command.CommandResponse;
 import xyz.finlaym.adminbot.action.script.Script;
 import xyz.finlaym.adminbot.storage.config.ScriptConfig;
+import xyz.finlaym.adminbot.utils.MathUtils;
 
 public class ModifyScriptCommand extends Command{
 
@@ -61,7 +62,12 @@ public class ModifyScriptCommand extends Command{
 			}
 			return new CommandResponse("Successfully added command to script!");
 		}else if(command.equalsIgnoreCase("remove")) {
-			scripts.remove(s);
+			if(!MathUtils.isInt(info.getCommand()[3]))
+				return new CommandResponse("Usage: "+usage,true);
+			int index = Integer.valueOf(info.getCommand()[3]) - 1;
+			if(index < 0 || index > scripts.get(s).getCommands().size())
+				return new CommandResponse("Command index out of bounds!");
+			scripts.get(s).getCommands().remove(index);
 			sConfig.setScripts(info.getGid(), scripts);
 			try {
 				sConfig.saveConfig(info.getGid());
