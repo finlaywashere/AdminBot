@@ -36,10 +36,12 @@ public class ListPermissionsCommand extends Command{
 				if(pConfig.checkPermission(info.getGuild(), info.getSender(), "permission.view.self")) {
 					List<Permission> perms = pConfig.getEffectivePermissions(info.getGuild(), info.getSender());
 					
-					String s = "User is admin: "+pConfig.hasAdmin(info.getSender())+"\nPermissions:\n```";
+					String s = "```";
+					if(pConfig.hasAdmin(info.getSender()))
+						s += "*\n";
 					if(perms != null && perms.size() > 0) {
 						for(Permission p : perms) {
-							s += "\n"+p;
+							s += p+"\n";
 						}
 					}else {
 						s += "\nNone";
@@ -59,10 +61,12 @@ public class ListPermissionsCommand extends Command{
 				try {
 					if(pConfig.checkPermission(info.getGuild(), info.getSender(), "permission.view.others.role."+id)) {
 						List<Permission> perms = pConfig.getGroupPerms(info.getGid(), new GroupIdentifier(Group.TYPE_ROLE, id));
-						String s = "Role has admin: "+pConfig.hasAdmin(info.getRoleMentions().get(0))+"\nPermissions:\n```";
+						String s = "```";
+						if(pConfig.hasAdmin(info.getRoleMentions().get(0)))
+							s += "*\n";
 						if(perms != null && perms.size() > 0) {
 							for(Permission p : perms) {
-								s += "\n"+p;
+								s += p+"\n";
 							}
 						}else {
 							s += "\nNone";
@@ -81,10 +85,12 @@ public class ListPermissionsCommand extends Command{
 				try {
 					if(pConfig.checkPermission(info.getGuild(), info.getSender(), "permission.view.others.user."+id)) {
 						List<Permission> perms = pConfig.getEffectivePermissions(info.getGuild(), info.getMemberMentions().get(0));
-						String s = "User is admin: "+pConfig.hasAdmin(info.getMemberMentions().get(0))+"\nPermissions:\n```";
+						String s = "```";
+						if(pConfig.hasAdmin(info.getMemberMentions().get(0)))
+							s += "*\n";
 						if(perms != null && perms.size() > 0) {
 							for(Permission p : perms) {
-								s += "\n"+p;
+								s += p+"\n";
 							}
 						}else {
 							s += "\nNone";

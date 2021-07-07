@@ -38,6 +38,9 @@ import xyz.finlaym.adminbot.action.message.command.commands.permissions.SearchPe
 import xyz.finlaym.adminbot.action.message.command.commands.response.AddResponseCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.response.DeleteResponseCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.response.ListResponsesCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.role.AddRoleCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.role.ListRolesCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.role.RemoveRoleCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.DeleteSessionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.SetSessionVariableCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.StartSessionCommand;
@@ -94,6 +97,9 @@ public class CommandHandler {
 		this.commands.add(new ListAliasesCommand());
 		this.commands.add(new DeleteAliasCommand());
 		this.commands.add(new SetStateCommand());
+		this.commands.add(new ListRolesCommand());
+		this.commands.add(new AddRoleCommand());
+		this.commands.add(new RemoveRoleCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -127,14 +133,16 @@ public class CommandHandler {
 			if(response != null && character == '|') {
 				commands[i] += " "+response.getMessage();
 			}
-			String[] command = commands[i].split(" ");
+			String[] command = commands[i].trim().split(" ");
 			try {
 				response = runCommand(member,channel,commands[i],command,message.getMentionedMembers(),message.getMentionedRoles(), message.getMentionedChannels(),message.mentionsEveryone(),state);
 				if(response == null) {
 					if(i == 0)
 						return; // Command not found
-					else
+					else {
 						state.getOutputChannel().sendMessage("Error: Command \""+commands[i]+"\" not found!").queue();
+						return;
+					}
 				}
 				if(response.getState() != null) {
 					state = response.getState();
@@ -164,6 +172,8 @@ public class CommandHandler {
 			message.delete().queue();
 	}
 	public String[] splitMessage(String message) {
+		if(message.length() == 0)
+			return new String[0];
 		String[] messages = new String[message.length()/2000 + ((message.length()%2000) > 0 ? 1 : 0)];
 		int curr = 0;
 		for(String s : message.split("\n")) {
