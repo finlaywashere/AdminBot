@@ -23,6 +23,7 @@ import xyz.finlaym.adminbot.storage.DBInterface;
 import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ReservationConfig;
+import xyz.finlaym.adminbot.storage.config.ScriptConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SessionConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
@@ -54,6 +55,7 @@ public class Bot extends ListenerAdapter {
 	private SessionConfig sessionConfig;
 	private ReservationConfig rConfig;
 	private TimedEventManager eManager;
+	private ScriptConfig scConfig;
 	
 	private JDA jda;
 	
@@ -73,6 +75,7 @@ public class Bot extends ListenerAdapter {
 		seConfig = new ServerConfig(dbInterface, this);
 		pConfig = new PermissionsConfig(dbInterface);
 		sessionConfig = new SessionConfig();
+		scConfig = new ScriptConfig(dbInterface); 
 		
 		TimedEventConfig eConfig= new TimedEventConfig(dbInterface);
 		eManager = new TimedEventManager(eConfig);
@@ -86,7 +89,9 @@ public class Bot extends ListenerAdapter {
 		
 		logger.info("Finished startup!");
 	}
-
+	public ScriptConfig getScriptConfig() {
+		return scConfig;
+	}
 	public ServerConfig getServerConfig() {
 		return seConfig;
 	}

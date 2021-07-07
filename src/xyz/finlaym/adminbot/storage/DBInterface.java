@@ -22,10 +22,12 @@ import xyz.finlaym.adminbot.action.permission.GroupIdentifier;
 import xyz.finlaym.adminbot.action.permission.Permission;
 import xyz.finlaym.adminbot.action.reserve.PermissionState;
 import xyz.finlaym.adminbot.action.reserve.ReservationState;
+import xyz.finlaym.adminbot.action.script.Script;
 import xyz.finlaym.adminbot.action.timer.TimedEvent;
 import xyz.finlaym.adminbot.storage.config.CurrencyConfig;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
 import xyz.finlaym.adminbot.storage.config.ReservationConfig;
+import xyz.finlaym.adminbot.storage.config.ScriptConfig;
 import xyz.finlaym.adminbot.storage.config.ServerConfig;
 import xyz.finlaym.adminbot.storage.config.SwearsConfig;
 import xyz.finlaym.adminbot.storage.config.TimedEventConfig;
@@ -310,6 +312,7 @@ public class DBInterface {
 					result += perms.get(i).toString();
 			}
 			Statement statement = conn.createStatement();
+			// This is safe because all these parameters are ints/longs
 			ResultSet rs = statement.executeQuery("SELECT * FROM `group_perms` WHERE `identifier`=\""+group.getIdentifier()+"\" AND `type`=\""+group.getType()+"\" AND `gid`=\""+gid+"\";");
 			rs.last();
 			if(rs.getRow() == 0) {
@@ -429,6 +432,54 @@ public class DBInterface {
 			} catch (Exception e1) {
 				logger.error("Failed to fix database connection", e1);
 			}
+		}
+	}
+	public void getScriptConfig(long gid, ScriptConfig config) throws Exception{
+		try {
+			Statement statement = conn.createStatement();
+			ResultSet rs = statement.executeQuery("SELECT * FROM `server_scripts` WHERE `gid` = \""+gid+"\";");
+			try {
+				List<Script> scripts = new ArrayList<Script>();
+				while(rs.next()) {
+					String script = rs.getString("script");
+					String name = rs.getString("name");
+					Script s = new Script(script,name);
+					scripts.add(s);
+				}
+				config.setScripts(gid, scripts);
+			}catch(SQLException e) {
+				logger.debug("SQL exception encountered, likely null row");
+				logger.trace("SQL exception encountered, likely null row", e);
+			}
+			rs.close();
+		}catch(Exception e) {
+			logger.error("Error reported! Attempting to recover", e);
+			fixConnection();
+		}
+	}
+	public void saveScriptConfig(long gid, ScriptConfig config) throws Exception{
+		try {
+			for(Script s : config.getScripts(gid)) {
+				Statement statement = conn.createStatement();
+				ResultSet rs = statement.executeQuery("SELECT * FROM `server_scripts` WHERE `gid`=\""+gid+"\";");
+				rs.last();
+				if(rs.getRow() == 0) {
+					PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_scripts` (`gid`, `script`, `name`) VALUES(?,?,?);");
+					pS.setString(3, s.getName());
+					pS.setString(2, s.toString());
+					pS.setLong(1, gid);
+					pS.executeUpdate();
+				}else {
+					PreparedStatement pS = conn.prepareStatement("UPDATE `server_scripts` SET `script`=? WHERE `name`=? AND `gid`=?;");
+					pS.setString(2, s.getName());
+					pS.setLong(3, gid);
+					pS.setString(1, s.toString());
+					pS.executeUpdate();
+				}
+			}
+		}catch(Exception e)  {
+			logger.error("Error reported! Attempting to recover", e);
+			fixConnection();
 		}
 	}
 }

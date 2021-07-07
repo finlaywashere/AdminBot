@@ -41,6 +41,10 @@ import xyz.finlaym.adminbot.action.message.command.commands.response.ListRespons
 import xyz.finlaym.adminbot.action.message.command.commands.role.AddRoleCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.role.ListRolesCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.role.RemoveRoleCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.script.AddScriptCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.script.DeleteScriptCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.script.ListScriptsCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.script.ModifyScriptCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.DeleteSessionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.SetSessionVariableCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.session.StartSessionCommand;
@@ -48,7 +52,9 @@ import xyz.finlaym.adminbot.action.message.command.commands.session.ViewHistoryC
 import xyz.finlaym.adminbot.action.message.command.commands.swear.AddSwearCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.swear.DeleteSwearCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.swear.ListSwearsCommand;
+import xyz.finlaym.adminbot.action.script.Script;
 import xyz.finlaym.adminbot.storage.config.PermissionsConfig;
+import xyz.finlaym.adminbot.storage.config.ScriptConfig;
 import xyz.finlaym.adminbot.utils.LoggerHelper;
 
 public class CommandHandler {
@@ -100,6 +106,10 @@ public class CommandHandler {
 		this.commands.add(new ListRolesCommand());
 		this.commands.add(new AddRoleCommand());
 		this.commands.add(new RemoveRoleCommand());
+		this.commands.add(new ListScriptsCommand());
+		this.commands.add(new AddScriptCommand());
+		this.commands.add(new DeleteScriptCommand());
+		this.commands.add(new ModifyScriptCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -111,13 +121,18 @@ public class CommandHandler {
 		//TODO: Implement restricted commands in private messages
 	}
 	public void handleCommand(Member member, TextChannel channel, Message message){
+		boolean delete = parseCommand(member, channel, message.getContentRaw(),message.getMentionedMembers(),message.getMentionedRoles(),message.getMentionedChannels(),message.mentionsEveryone());
+		if(delete)
+			message.delete().queue();
+	}
+	public boolean parseCommand(Member member, TextChannel channel, String message, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone) {
 		long gid = channel.getGuild().getIdLong();
 		String prefix = this.bot.getServerConfig().getPrefix(gid);
-		if(!message.getContentRaw().startsWith(prefix))
-			return;
-		String[] commands = message.getContentRaw().substring(prefix.length()).trim().split("\\||\\&");
+		if(!message.startsWith(prefix))
+			return false;
+		String[] commands = message.substring(prefix.length()).trim().split("\\||\\&");
 		if(commands.length == 0)
-			return;
+			return false;
 		boolean silenced = false;
 		if(commands[0].startsWith("!")) {
 			commands[0] = commands[0].substring(1);
@@ -127,7 +142,7 @@ public class CommandHandler {
 		CommandResponse response = null;
 		int charIndex = 0;
 		for(int i = 0; i < commands.length; i++) {
-			char character = message.getContentRaw().charAt(charIndex);
+			char character = message.charAt(charIndex);
 			charIndex += commands[i].length() + 1;
 			commands[i] = commands[i].trim();
 			if(response != null && character == '|') {
@@ -135,19 +150,19 @@ public class CommandHandler {
 			}
 			String[] command = commands[i].trim().split(" ");
 			try {
-				response = runCommand(member,channel,commands[i],command,message.getMentionedMembers(),message.getMentionedRoles(), message.getMentionedChannels(),message.mentionsEveryone(),state);
+				response = runCommand(member,channel,commands[i],command,mMentioned,rMentioned, cMentioned,mentionsEveryone,state);
 				if(response == null) {
 					if(i == 0)
-						return; // Command not found
+						return false; // Command not found
 					else {
 						state.getOutputChannel().sendMessage("Error: Command \""+commands[i]+"\" not found!").queue();
-						return;
+						return false;
 					}
 				}
 				if(response.getState() != null) {
 					state = response.getState();
 				}
-				if(i == commands.length-1 || message.getContentRaw().charAt(charIndex) == '&') {
+				if(i == commands.length-1 || message.charAt(charIndex) == '&') {
 					if((state.isSilenced() && response.isFailure()) || !state.isSilenced() || response.isForce()) {
 						String[] newMessage = splitMessage(response.getMessage()); 
 						for(String s : newMessage) {
@@ -158,7 +173,7 @@ public class CommandHandler {
 			}catch(Exception e) {
 				state.getOutputChannel().sendMessage("Error: Failed to execute command!").queue();
 				logger.error("Failed to execute command!", e);
-				return;
+				return false;
 			}
 		}
 		boolean delete = false;
@@ -168,8 +183,7 @@ public class CommandHandler {
 		}else {
 			delete = true;
 		}
-		if(delete)
-			message.delete().queue();
+		return delete;
 	}
 	public String[] splitMessage(String message) {
 		if(message.length() == 0)
@@ -220,7 +234,34 @@ public class CommandHandler {
 				}
 			}
 		}
-		return null; // Return null to indicate command not found
+		ScriptConfig sConfig = bot.getScriptConfig();
+		List<Script> scripts = sConfig.getScripts(gid);
+		if(scripts == null) {
+			try {
+				sConfig.loadConfig(gid);
+			}catch(Exception e) {
+				logger.error("Failed to load script config!",e);
+				return new CommandResponse("Critical Error: Failed to load script config!",true);
+			}
+			scripts = sConfig.getScripts(gid);
+		}
+		if(scripts != null) {
+			for(Script s : scripts) {
+				if(s.getName().equalsIgnoreCase(command[0])) {
+					if(pConfig.checkPermission(channel.getGuild(), member, "script."+s.getName())) {
+						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "successfully executed script \""+message+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
+						for(String c : s.getCommands()) {
+							parseCommand(member, channel, "-"+c, new ArrayList<Member>(), new ArrayList<Role>(), new ArrayList<TextChannel>(), false);
+						}
+						return null;
+					}else {
+						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "tried to execute script with insufficient permissions\""+message+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
+						return new CommandResponse("Error: Insufficient permissions to execute script!",true);
+					}
+				}
+			}
+		}
+		return new CommandResponse("Command not found!");
 	}
 	private boolean checkFlags(long actual, long expected) {
 		long and = actual & expected;
