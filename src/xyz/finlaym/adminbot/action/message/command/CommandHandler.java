@@ -250,8 +250,16 @@ public class CommandHandler {
 				if(s.getName().equalsIgnoreCase(command[0])) {
 					if(pConfig.checkPermission(channel.getGuild(), member, "script."+s.getName())) {
 						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "successfully executed script \""+message+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
-						for(String c : s.getCommands()) {
-							parseCommand(member, channel, "-"+c, new ArrayList<Member>(), new ArrayList<Role>(), new ArrayList<TextChannel>(), false);
+						for(int i = 0; i < s.getCommands().size(); i++) {
+							String c = "-"+s.getCommands().get(i);
+							// Go in reverse order so that $11 doesn't act like $1(1)
+							for(int i1 = command.length-1; i1 >= 1; i1--) {
+								c = c.replaceAll("\\$"+i1, command[i1]);
+							}
+							if(i == 0)
+								parseCommand(member, channel, c, mMentioned, rMentioned, cMentioned, mentionsEveryone);
+							else
+								parseCommand(member, channel, c, new ArrayList<Member>(), new ArrayList<Role>(), new ArrayList<TextChannel>(), false);
 						}
 						return null;
 					}else {
