@@ -65,7 +65,7 @@ public class ModifyScriptCommand extends Command{
 			if(!MathUtils.isInt(info.getCommand()[3]))
 				return new CommandResponse("Usage: "+usage,true);
 			int index = Integer.valueOf(info.getCommand()[3]) - 1;
-			if(index < 0 || index > scripts.get(s).getCommands().size())
+			if(index < 0 || index > scripts.get(s).getCommands().size() || scripts.get(s).getCommands().size() == 0)
 				return new CommandResponse("Command index out of bounds!");
 			scripts.get(s).getCommands().remove(index);
 			sConfig.setScripts(info.getGid(), scripts);
