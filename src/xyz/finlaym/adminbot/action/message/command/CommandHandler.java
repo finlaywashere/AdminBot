@@ -121,18 +121,18 @@ public class CommandHandler {
 		//TODO: Implement restricted commands in private messages
 	}
 	public void handleCommand(Member member, TextChannel channel, Message message){
-		boolean delete = parseCommand(member, channel, message.getContentRaw(),message.getMentionedMembers(),message.getMentionedRoles(),message.getMentionedChannels(),message.mentionsEveryone());
-		if(delete)
+		int delete = parseCommand(member, channel, message.getContentRaw(),message.getMentionedMembers(),message.getMentionedRoles(),message.getMentionedChannels(),message.mentionsEveryone());
+		if(delete == 1)
 			message.delete().queue();
 	}
-	public boolean parseCommand(Member member, TextChannel channel, String message, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone) {
+	public int parseCommand(Member member, TextChannel channel, String message, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone) {
 		long gid = channel.getGuild().getIdLong();
 		String prefix = this.bot.getServerConfig().getPrefix(gid);
 		if(!message.startsWith(prefix))
-			return false;
+			return 2;
 		String[] commands = message.substring(prefix.length()).trim().split("\\||\\&");
 		if(commands.length == 0)
-			return false;
+			return 2;
 		boolean silenced = false;
 		if(commands[0].startsWith("!")) {
 			commands[0] = commands[0].substring(1);
@@ -153,10 +153,10 @@ public class CommandHandler {
 				response = runCommand(member,channel,commands[i],command,mMentioned,rMentioned, cMentioned,mentionsEveryone,state);
 				if(response == null) {
 					if(i == 0)
-						return false; // Command not found
+						return 2; // Command not found
 					else {
 						state.getOutputChannel().sendMessage("Error: Command \""+commands[i]+"\" not found!").queue();
-						return false;
+						return 2;
 					}
 				}
 				if(response.getState() != null) {
@@ -173,7 +173,7 @@ public class CommandHandler {
 			}catch(Exception e) {
 				state.getOutputChannel().sendMessage("Error: Failed to execute command!").queue();
 				logger.error("Failed to execute command!", e);
-				return false;
+				return 2;
 			}
 		}
 		boolean delete = false;
@@ -183,7 +183,10 @@ public class CommandHandler {
 		}else {
 			delete = true;
 		}
-		return delete;
+		if(delete)
+			return 1;
+		else
+			return 0;
 	}
 	public String[] splitMessage(String message) {
 		if(message.length() == 0)
@@ -256,10 +259,14 @@ public class CommandHandler {
 							for(int i1 = command.length-1; i1 >= 1; i1--) {
 								c = c.replaceAll("\\$"+i1, command[i1]);
 							}
+							int response;
 							if(i == 0)
-								parseCommand(member, channel, c, mMentioned, rMentioned, cMentioned, mentionsEveryone);
+								response = parseCommand(member, channel, c, mMentioned, rMentioned, cMentioned, mentionsEveryone);
 							else
-								parseCommand(member, channel, c, new ArrayList<Member>(), new ArrayList<Role>(), new ArrayList<TextChannel>(), false);
+								response = parseCommand(member, channel, c, new ArrayList<Member>(), new ArrayList<Role>(), new ArrayList<TextChannel>(), false);
+							if(response > 1) {
+								return new CommandResponse("Script error!",true);
+							}
 						}
 						return null;
 					}else {

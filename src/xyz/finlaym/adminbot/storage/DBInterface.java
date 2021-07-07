@@ -460,8 +460,9 @@ public class DBInterface {
 	public void saveScriptConfig(long gid, ScriptConfig config) throws Exception{
 		try {
 			for(Script s : config.getScripts(gid)) {
-				Statement statement = conn.createStatement();
-				ResultSet rs = statement.executeQuery("SELECT * FROM `server_scripts` WHERE `gid`=\""+gid+"\";");
+				PreparedStatement statement = conn.prepareStatement("SELECT * FROM `server_scripts` WHERE `gid`=\""+gid+"\" AND `name`=?;");
+				statement.setString(1, s.getName());
+				ResultSet rs = statement.executeQuery();
 				rs.last();
 				if(rs.getRow() == 0) {
 					PreparedStatement pS = conn.prepareStatement("INSERT INTO `server_scripts` (`gid`, `script`, `name`) VALUES(?,?,?);");
