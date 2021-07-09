@@ -29,6 +29,7 @@ import xyz.finlaym.adminbot.action.message.command.commands.currency.GetBalanceC
 import xyz.finlaym.adminbot.action.message.command.commands.currency.SetBalanceCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.currency.SetCurrencySuffixCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.debug.DebugInfoCommand;
+import xyz.finlaym.adminbot.action.message.command.commands.helper.CheckArgumentsCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.helper.SetStateCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.AddPermissionCommand;
 import xyz.finlaym.adminbot.action.message.command.commands.permissions.ListPermissionsCommand;
@@ -110,6 +111,7 @@ public class CommandHandler {
 		this.commands.add(new AddScriptCommand());
 		this.commands.add(new DeleteScriptCommand());
 		this.commands.add(new ModifyScriptCommand());
+		this.commands.add(new CheckArgumentsCommand());
 	}
 	public Bot getBot() {
 		return bot;
@@ -121,24 +123,39 @@ public class CommandHandler {
 		//TODO: Implement restricted commands in private messages
 	}
 	public void handleCommand(Member member, TextChannel channel, Message message){
-		int delete = parseCommand(member, channel, message.getContentRaw(),message.getMentionedMembers(),message.getMentionedRoles(),message.getMentionedChannels(),message.mentionsEveryone());
-		if(delete == 1)
+		CommandResult delete = parseCommand(member, channel, message.getContentRaw(),message.getMentionedMembers(),message.getMentionedRoles(),message.getMentionedChannels(),message.mentionsEveryone());
+		if(delete.getCode() == 1)
 			message.delete().queue();
 	}
-	public int parseCommand(Member member, TextChannel channel, String message, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone) {
-		long gid = channel.getGuild().getIdLong();
-		String prefix = this.bot.getServerConfig().getPrefix(gid);
+	public CommandResult parseCommand(Member member, TextChannel channel, String message, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone) {
+		String prefix = this.bot.getServerConfig().getPrefix(channel.getGuild().getIdLong());
 		if(!message.startsWith(prefix))
-			return 2;
+			return new CommandResult(2,null,null);
 		String[] commands = message.substring(prefix.length()).trim().split("\\||\\&");
 		if(commands.length == 0)
-			return 2;
+			return new CommandResult(2,null,null);
 		boolean silenced = false;
 		if(commands[0].startsWith("!")) {
 			commands[0] = commands[0].substring(1);
 			silenced = true;
 		}
 		CommandState state = new CommandState(channel, silenced);
+		return parseCommand(member, channel, message, mMentioned, rMentioned, cMentioned, mentionsEveryone,state);
+	}
+	public CommandResult parseCommand(Member member, TextChannel channel, String message, List<Member> mMentioned, List<Role> rMentioned, List<TextChannel> cMentioned, boolean mentionsEveryone, CommandState state) {
+		long gid = channel.getGuild().getIdLong();
+		String prefix = this.bot.getServerConfig().getPrefix(gid);
+		if(!message.startsWith(prefix))
+			return new CommandResult(2,null,null);
+		String[] commands = message.substring(prefix.length()).trim().split("\\||\\&");
+		if(commands.length == 0)
+			return new CommandResult(2,null,null);
+		boolean silenced = false;
+		if(commands[0].startsWith("!")) {
+			commands[0] = commands[0].substring(1);
+			silenced = true;
+		}
+		state.setSilenced(silenced);
 		CommandResponse response = null;
 		int charIndex = 0;
 		for(int i = 0; i < commands.length; i++) {
@@ -153,10 +170,10 @@ public class CommandHandler {
 				response = runCommand(member,channel,commands[i],command,mMentioned,rMentioned, cMentioned,mentionsEveryone,state);
 				if(response == null) {
 					if(i == 0)
-						return 2; // Command not found
+						return new CommandResult(2,state,response); // Command not found
 					else {
 						state.getOutputChannel().sendMessage("Error: Command \""+commands[i]+"\" not found!").queue();
-						return 2;
+						return new CommandResult(2,state,response);
 					}
 				}
 				if(response.getState() != null) {
@@ -173,9 +190,11 @@ public class CommandHandler {
 			}catch(Exception e) {
 				state.getOutputChannel().sendMessage("Error: Failed to execute command!").queue();
 				logger.error("Failed to execute command!", e);
-				return 2;
+				return new CommandResult(2,state,response);
 			}
 		}
+		if(response.isFailure())
+			return new CommandResult(2,state,response);
 		boolean delete = false;
 		if((silenced && response.isFailure()) || !silenced || response.isForce()) {
 			if(silenced && response.isForce())
@@ -184,9 +203,9 @@ public class CommandHandler {
 			delete = true;
 		}
 		if(delete)
-			return 1;
+			return new CommandResult(1,state,response);
 		else
-			return 0;
+			return new CommandResult(0,state,response);
 	}
 	public String[] splitMessage(String message) {
 		if(message.length() == 0)
@@ -248,27 +267,33 @@ public class CommandHandler {
 			}
 			scripts = sConfig.getScripts(gid);
 		}
+		String prefix = this.bot.getServerConfig().getPrefix(gid);
 		if(scripts != null) {
 			for(Script s : scripts) {
 				if(s.getName().equalsIgnoreCase(command[0])) {
 					if(pConfig.checkPermission(channel.getGuild(), member, "script."+s.getName())) {
 						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "successfully executed script \""+message+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
 						for(int i = 0; i < s.getCommands().size(); i++) {
-							String c = "-"+s.getCommands().get(i);
+							String rawCommand = s.getCommands().get(i);
+							String c = prefix+rawCommand;
 							// Go in reverse order so that $11 doesn't act like $1(1)
 							for(int i1 = command.length-1; i1 >= 1; i1--) {
 								c = c.replaceAll("\\$"+i1, command[i1]);
 							}
-							int response;
+							CommandResult response;
 							if(i == 0)
-								response = parseCommand(member, channel, c, mMentioned, rMentioned, cMentioned, mentionsEveryone);
+								response = parseCommand(member, channel, c, mMentioned, rMentioned, cMentioned, mentionsEveryone,state);
 							else
-								response = parseCommand(member, channel, c, new ArrayList<Member>(), new ArrayList<Role>(), new ArrayList<TextChannel>(), false);
-							if(response > 1) {
-								return new CommandResponse("Script error!",true);
+								response = parseCommand(member, channel, c, new ArrayList<Member>(), new ArrayList<Role>(), new ArrayList<TextChannel>(), false,state);
+							if(response.getCode() > 1) {
+								String output2 = "";
+								if(response.getState().isOutputScriptFailure()) {
+									output2 = "Script error at command "+(i+1)+"!";
+								}
+								return new CommandResponse(output2,true);
 							}
 						}
-						return null;
+						return new CommandResponse("",false);
 					}else {
 						LoggerHelper.log(logger, channel.getGuild(), bot.getServerConfig().getLoggingChannel(gid), member.getUser(), "tried to execute script with insufficient permissions\""+message+"\" in channel "+channel.getAsMention(), bot.getDBInterface());
 						return new CommandResponse("Error: Insufficient permissions to execute script!",true);
